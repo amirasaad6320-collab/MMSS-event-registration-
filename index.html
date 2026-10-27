@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MMSS Gate QR &amp; Serial Check-In</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsQR@1.4.0/dist/jsQR.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -113,6 +113,11 @@
       color: #ffffff;
       box-shadow: 0 8px 20px rgba(217, 119, 6, 0.25);
     }
+    .btn-teal {
+      background: linear-gradient(135deg, #0d9488, #0f766e);
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25);
+    }
     .hidden { display: none !important; }
     .error-box {
       color: #991b1b;
@@ -143,12 +148,12 @@
     }
     .scanner-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 10px;
       margin-top: 10px;
     }
-    .scanner-actions.single-col {
-      grid-template-columns: 1fr;
+    @media(min-width: 480px) {
+      .scanner-actions { grid-template-columns: 1fr 1fr; }
     }
     .video-wrap {
       position: relative;
@@ -232,7 +237,7 @@
       margin-bottom: 14px;
     }
     @media (max-width: 520px) {
-      .scanner-actions, .manual-row { grid-template-columns: 1fr; }
+      .manual-row { grid-template-columns: 1fr; }
       .card { padding: 18px; }
     }
   </style>
@@ -250,11 +255,10 @@
       </div>
       <p class="hint">Sign in with your gate staff name and organizer PIN to scan QR tickets or verify serial numbers.</p>
 
-      <!-- Shown only when opened as a standalone HTML file outside Google Apps Script -->
+      <!-- مخفي أو افتراضي بالرابط الخاص بك -->
       <div id="externalGasUrlBox" class="api-box hidden">
-        <label class="field-label" for="gasWebAppUrlInput" style="margin-top:0;">Google Apps Script Web App URL (Optional for Demo)</label>
-        <input class="input-ctrl" id="gasWebAppUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:0.82rem;padding:9px 11px;" />
-        <div class="hint" style="margin:4px 0 0;font-size:0.75rem;">Paste your deployed <code>/exec</code> URL to connect live camera directly to your Google Sheet without iframe restrictions!</div>
+        <label class="field-label" for="gasWebAppUrlInput" style="margin-top:0;">Google Apps Script Web App URL</label>
+        <input class="input-ctrl" id="gasWebAppUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbzS8F8w-7aoPuqeKo_EdWJkQ7mR80ezwUviQMYwmaLiPkbx1bfMXAlQm1kwOkE1kIeB/exec" style="font-size:0.82rem;padding:9px 11px;" />
       </div>
 
       <form id="authForm">
@@ -290,12 +294,12 @@
         </select>
       </div>
 
-      <!-- STEP 2: QR CAMERA & INSTANT SNAPSHOT SCANNER -->
+      <!-- STEP 2: QR SCANNER BUTTONS (SNAP & UPLOAD SEPARATED) -->
       <div class="scanner-box">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
           <div>
             <strong style="font-size:0.95rem;color:#0f172a;">2. Scan Ticket QR Code</strong>
-            <p class="hint" style="margin:2px 0 0;font-size:0.8rem;" id="scanSubHint">Tap the orange button below to scan the QR code with your phone camera, or upload a QR image.</p>
+            <p class="hint" style="margin:2px 0 0;font-size:0.8rem;" id="scanSubHint">اختر طريقة المسح إما بتصوير الكاميرا مباشرة أو اختيار صورة من الاستوديو.</p>
           </div>
         </div>
 
@@ -305,17 +309,24 @@
         </div>
 
         <div id="gasCameraInfo" class="gas-info-banner hidden">
-          💡 <strong>نصيحة سريعة داخل Google Apps Script:</strong> لأن جوجل تضع الصفحة داخل <code>iframe</code> يمنع بث الفيديو المباشر، استخدمي الزر البرتقالي <strong>"📸 فتح الكاميرا لتصوير/رفع الـ QR"</strong> بالأسفل — يفتح كاميرا الموبايل فوراً ويفك الـ QR في أقل من ثانية! أو امسحي الـ QR مباشرةً من تطبيق الكاميرا العادي في موبايلك.
+          💡 <strong>ملاحظة:</strong> إذا كانت الكاميرا المباشرة محظورة داخل صفحة الـ Iframe، يمكنك استخدام زري التصوير أو الرفع أدناه بسلاسة تامة.
         </div>
 
         <div class="scanner-actions" id="scannerActionGrid">
-          <label class="btn btn-amber file-capture-label" for="qrFileInput" id="snapLabelBtn">
-            📸 فتح الكاميرا لتصوير / رفع الـ QR (Iframe-Safe)
+          <!-- زر التقاط صورة بالكاميرا مباشرة (Snap Camera) -->
+          <label class="btn btn-amber file-capture-label" for="snapCameraInput">
+            📸 التقاط صورة بكاميرا الموبايل (Snap)
           </label>
-          <input type="file" id="qrFileInput" accept="image/*" capture="environment" class="hidden" />
+          <input type="file" id="snapCameraInput" accept="image/*" capture="environment" class="hidden" />
 
-          <button type="button" class="btn" id="startLiveCamBtn">🎥 Start Live Camera</button>
-          <button type="button" class="btn btn-danger hidden" id="stopLiveCamBtn">⏹ Stop Live Camera</button>
+          <!-- زر رفع صورة QR من الاستوديو (Upload Photo) -->
+          <label class="btn btn-teal file-capture-label" for="uploadGalleryInput">
+            📁 رفع صورة الـ QR (Upload Photo)
+          </label>
+          <input type="file" id="uploadGalleryInput" accept="image/*" class="hidden" />
+
+          <button type="button" class="btn" id="startLiveCamBtn" style="grid-column: 1 / -1;">🎥 Start Live Camera Stream</button>
+          <button type="button" class="btn btn-danger hidden" id="stopLiveCamBtn" style="grid-column: 1 / -1;">⏹ Stop Live Camera</button>
         </div>
 
         <!-- LIVE VIDEO PREVIEW -->
@@ -348,7 +359,7 @@
     var openedFromQr  = ('<?= fromTicketQr ?>' === 'true');
 
     var isGasRuntime = (typeof google !== 'undefined' && google.script && google.script.run);
-    var externalGasUrl = '';
+    var externalGasUrl = 'https://script.google.com/macros/s/AKfycbzS8F8w-7aoPuqeKo_EdWJkQ7mR80ezwUviQMYwmaLiPkbx1bfMXAlQm1kwOkE1kIeB/exec';
 
     var demoEvents = [
       { id: 'EVT_DEMO_2026', name: 'MMSS Annual Medical Conference 2026' },
@@ -357,7 +368,7 @@
     var demoAttendees = {
       '0001': { name: 'Dr. Ahmed Mohamed', serial: '0001', batch: 'Year 4', status: 'Dispatched', checkInTime: '', checkInBy: '' },
       '0042': { name: 'Dr. Mariam Hassan', serial: '0042', batch: 'Year 3', status: 'Verified', checkInTime: '', checkInBy: '' },
-      '0099': { name: 'Dr. Omar Khaled',   serial: '0099', batch: 'Intern 1', status: 'Checked In', checkInTime: '2026-10-28 09:30 AM', checkInBy: 'Dr. Sara' }
+      '0099': { name: 'Dr. Omar Khaled',    serial: '0099', batch: 'Intern 1', status: 'Checked In', checkInTime: '2026-10-28 09:30 AM', checkInBy: 'Dr. Sara' }
     };
 
     var qrEventId = '', qrSerial = '';
@@ -385,7 +396,6 @@
       try { localStorage.removeItem(k); } catch (e) {}
     }
 
-    // Detect if running inside Google Apps Script iframe where Permissions-Policy blocks getUserMedia
     function isCameraBlockedByPermissionsPolicy() {
       try {
         if (document.featurePolicy && typeof document.featurePolicy.allowsFeature === 'function') {
@@ -399,13 +409,15 @@
     }
 
     function initEnvironmentUI() {
-      if (!isGasRuntime) {
-        var box = document.getElementById('externalGasUrlBox');
-        if (box) box.classList.remove('hidden');
+      var urlInput = document.getElementById('gasWebAppUrlInput');
+      if (urlInput && urlInput.value.trim()) {
+        externalGasUrl = urlInput.value.trim();
+        safeStorageSet('mmss_external_gas_url', externalGasUrl);
+      } else {
         var savedUrl = safeStorageGet('mmss_external_gas_url');
         if (savedUrl) {
-          document.getElementById('gasWebAppUrlInput').value = savedUrl;
           externalGasUrl = savedUrl;
+          if (urlInput) urlInput.value = savedUrl;
         }
       }
       if (isCameraBlockedByPermissionsPolicy()) {
@@ -413,10 +425,6 @@
       }
     }
 
-    // Unified backend caller:
-    // 1. Inside GAS -> google.script.run
-    // 2. Standalone HTML with GAS /exec URL -> fetch() POST to doPost(e)
-    // 3. Standalone Demo -> in-memory demo data
     function callBackend(action, payload, onSuccess, onError) {
       if (isGasRuntime) {
         var runner = google.script.run.withSuccessHandler(onSuccess).withFailureHandler(onError);
@@ -454,7 +462,7 @@
         return;
       }
 
-      // Demo mode fallback
+      // Demo fallback
       setTimeout(function() {
         if (action === 'verifyOrganizerPin') onSuccess('DEMO_TOKEN');
         else if (action === 'checkOrganizerSession') onSuccess(true);
@@ -554,7 +562,7 @@
         btn.disabled = false;
         btn.textContent = 'Unlock Gate Scanner →';
         if (!token) {
-          showAuthError('Organizer PIN was not accepted. Check MMSS_ORGANIZER_PIN in Script Properties or CONFIG.');
+          showAuthError('Organizer PIN was not accepted. Check MMSS_ORGANIZER_PIN in Script Properties.');
           return;
         }
         authToken = token;
@@ -586,7 +594,7 @@
       document.getElementById('authPanel').classList.add('hidden');
       document.getElementById('gatePanel').classList.remove('hidden');
       document.getElementById('staffLabel').textContent = 'Gate staff: ' + staffName;
-      document.getElementById('envBadge').textContent = isGasRuntime ? 'Apps Script' : (externalGasUrl ? 'Standalone Live' : 'Demo Mode');
+      document.getElementById('envBadge').textContent = isGasRuntime ? 'Apps Script' : 'Standalone Live';
       loadEvents();
       if (qrEventId && qrSerial) {
         ticketEventId = qrEventId;
@@ -617,7 +625,7 @@
       }
     }
 
-    // ── LIVE CAMERA OR AUTOMATIC FALLBACK TO NATIVE CAMERA SNAPSHOT ──────────────────
+    // ── LIVE CAMERA ──────────────────────────────────────────────────────────────────
     document.getElementById('startLiveCamBtn').addEventListener('click', startLiveCamera);
     document.getElementById('stopLiveCamBtn').addEventListener('click', stopLiveCamera);
 
@@ -629,8 +637,7 @@
       }
 
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        // Automatically open native phone camera capture
-        document.getElementById('qrFileInput').click();
+        document.getElementById('snapCameraInput').click();
         return;
       }
 
@@ -650,11 +657,9 @@
         setStatus('Point camera at the attendee QR code…', '');
         scanAnimFrame = requestAnimationFrame(scanVideoFrame);
       }).catch(function(err) {
-        console.warn('Live stream blocked by GAS iframe, switching to Native Camera Capture:', err);
+        console.warn('Live stream blocked, switching to Snap camera:', err);
         document.getElementById('gasCameraInfo').classList.remove('hidden');
-        setStatus('Switching to native phone camera capture (Iframe-Safe)…', '');
-        // Automatically trigger the native camera file input so the user doesn't get stuck!
-        document.getElementById('qrFileInput').click();
+        document.getElementById('snapCameraInput').click();
       });
     }
 
@@ -699,17 +704,15 @@
       scanAnimFrame = requestAnimationFrame(scanVideoFrame);
     }
 
-    // ── IFRAME-SAFE SNAPSHOT / PHOTO QR SCANNER ──────────────────────────────────────
-    document.getElementById('qrFileInput').addEventListener('change', function(e) {
-      var file = e.target.files && e.target.files[0];
+    // ── منفذ معالجة الصور المشترك (SNAP & UPLOAD) ──────────────────────────────────
+    function processImageFile(file) {
       if (!file) return;
       var currentEv = document.getElementById('eventSelect').value;
       if (!currentEv) {
         showResult('invalid', 'Please select an Active Event in Step 1 first.', '');
-        e.target.value = '';
         return;
       }
-      setStatus('Decoding QR photo…', '');
+      setStatus('Decoding QR image…', '');
       var reader = new FileReader();
       reader.onload = function(ev) {
         var img = new Image();
@@ -734,17 +737,30 @@
               }
             }
           }
-          e.target.value = '';
           if (decoded) {
             handleDecodedQr(decoded);
           } else {
             playBeep('error');
-            showResult('invalid', 'Could not detect a clear QR code in that photo.', '<p>Make sure the QR code is flat, well-lit, and fills the center of the frame, or type the 4-digit Serial ID below.</p>');
+            showResult('invalid', 'Could not detect a clear QR code.', '<p>Make sure the QR code is clear and well-lit, or type the 4-digit Serial ID manually.</p>');
           }
         };
         img.src = ev.target.result;
       };
       reader.readAsDataURL(file);
+    }
+
+    // ربط زر التقاط الكاميرا (Snap)
+    document.getElementById('snapCameraInput').addEventListener('change', function(e) {
+      var file = e.target.files && e.target.files[0];
+      processImageFile(file);
+      e.target.value = '';
+    });
+
+    // ربط زر رفع الصورة من الاستوديو (Upload Photo)
+    document.getElementById('uploadGalleryInput').addEventListener('change', function(e) {
+      var file = e.target.files && e.target.files[0];
+      processImageFile(file);
+      e.target.value = '';
     });
 
     function handleDecodedQr(rawQrText) {
