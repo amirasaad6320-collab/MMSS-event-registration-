@@ -299,7 +299,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
           <div>
             <strong style="font-size:0.95rem;color:#0f172a;">2. Scan Ticket QR Code</strong>
-            <p class="hint" style="margin:2px 0 0;font-size:0.8rem;" id="scanSubHint">اختر طريقة المسح إما بتصوير الكاميرا مباشرة أو اختيار صورة من الاستوديو.</p>
+            <p class="hint" style="margin:2px 0 0;font-size:0.8rem;" id="scanSubHint">choose what do you want</p>
           </div>
         </div>
 
@@ -309,19 +309,18 @@
         </div>
 
         <div id="gasCameraInfo" class="gas-info-banner hidden">
-          💡 <strong>ملاحظة:</strong> إذا كانت الكاميرا المباشرة محظورة داخل صفحة الـ Iframe، يمكنك استخدام زري التصوير أو الرفع أدناه بسلاسة تامة.
         </div>
 
         <div class="scanner-actions" id="scannerActionGrid">
-          <!-- زر التقاط صورة بالكاميرا مباشرة (Snap Camera) -->
+          <!(Snap Camera) -->
           <label class="btn btn-amber file-capture-label" for="snapCameraInput">
-            📸 التقاط صورة بكاميرا الموبايل (Snap)
+            📸 (Snap)
           </label>
           <input type="file" id="snapCameraInput" accept="image/*" capture="environment" class="hidden" />
 
-          <!-- زر رفع صورة QR من الاستوديو (Upload Photo) -->
+          <!-- (Upload Photo) -->
           <label class="btn btn-teal file-capture-label" for="uploadGalleryInput">
-            📁 رفع صورة الـ QR (Upload Photo)
+          QR (Upload Photo)
           </label>
           <input type="file" id="uploadGalleryInput" accept="image/*" class="hidden" />
 
