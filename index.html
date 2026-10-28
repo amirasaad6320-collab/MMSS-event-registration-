@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MMSS Gate QR &amp; Serial Check-In</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/jsQR@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -28,7 +28,7 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.45);
       border: 1px solid #e2e8f0;
     }
-    .auth { max-width: 440px; margin: auto; }
+    .auth { max-width: 460px; margin: auto; }
     .brand-bar {
       display: flex;
       align-items: center;
@@ -49,6 +49,8 @@
       border-radius: 999px;
       white-space: nowrap;
     }
+    .badge-pill.ok { background: #dcfce7; color: #166534; }
+    .badge-pill.warn { background: #fef3c7; color: #92400e; }
     .hint { color: #64748b; font-size: 0.88rem; line-height: 1.5; margin: 0 0 14px; }
     label.field-label {
       display: block;
@@ -113,11 +115,6 @@
       color: #ffffff;
       box-shadow: 0 8px 20px rgba(217, 119, 6, 0.25);
     }
-    .btn-teal {
-      background: linear-gradient(135deg, #0d9488, #0f766e);
-      color: #ffffff;
-      box-shadow: 0 8px 20px rgba(13, 148, 136, 0.25);
-    }
     .hidden { display: none !important; }
     .error-box {
       color: #991b1b;
@@ -148,23 +145,33 @@
     }
     .scanner-actions {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin-top: 10px;
     }
-    @media(min-width: 480px) {
-      .scanner-actions { grid-template-columns: 1fr 1fr; }
+    .cam-sub-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .cam-sub-controls .btn {
+      width: auto;
+      padding: 8px 13px;
+      font-size: 0.82rem;
     }
     .video-wrap {
       position: relative;
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       margin: 12px auto 0;
-      border-radius: 14px;
+      border-radius: 16px;
       overflow: hidden;
       background: #0f172a;
       aspect-ratio: 4 / 3;
-      border: 2px solid #2563eb;
+      border: 2.5px solid #2563eb;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.25);
     }
     .video-wrap video {
       width: 100%;
@@ -174,10 +181,38 @@
     }
     .scan-reticle {
       position: absolute;
-      inset: 18%;
-      border: 2px dashed rgba(56, 189, 248, 0.9);
-      border-radius: 14px;
-      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.32);
+      inset: 14%;
+      border: 2.5px dashed rgba(56, 189, 248, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.35);
+      pointer-events: none;
+    }
+    .scan-laser {
+      position: absolute;
+      left: 16%;
+      right: 16%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #38bdf8, #22c55e, #38bdf8, transparent);
+      box-shadow: 0 0 10px #38bdf8;
+      animation: laserSweep 2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes laserSweep {
+      0%, 100% { top: 18%; opacity: 0.75; }
+      50% { top: 80%; opacity: 1; }
+    }
+    .engine-pill {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.82);
+      color: #38bdf8;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
       pointer-events: none;
     }
     .status {
@@ -231,13 +266,13 @@
     }
     .api-box {
       background: #f8fafc;
-      border: 1px dashed #94a3b8;
+      border: 1.5px dashed #94a3b8;
       border-radius: 12px;
       padding: 12px;
       margin-bottom: 14px;
     }
     @media (max-width: 520px) {
-      .manual-row { grid-template-columns: 1fr; }
+      .scanner-actions, .manual-row { grid-template-columns: 1fr; }
       .card { padding: 18px; }
     }
   </style>
@@ -255,10 +290,13 @@
       </div>
       <p class="hint">Sign in with your gate staff name and organizer PIN to scan QR tickets or verify serial numbers.</p>
 
-      <!-- مخفي أو افتراضي بالرابط الخاص بك -->
+      <!-- Shown when opened on GitHub Pages / standalone outside Google Apps Script -->
       <div id="externalGasUrlBox" class="api-box hidden">
-        <label class="field-label" for="gasWebAppUrlInput" style="margin-top:0;">Google Apps Script Web App URL</label>
-        <input class="input-ctrl" id="gasWebAppUrlInput" type="url" value="https://script.google.com/macros/s/AKfycbzS8F8w-7aoPuqeKo_EdWJkQ7mR80ezwUviQMYwmaLiPkbx1bfMXAlQm1kwOkE1kIeB/exec" style="font-size:0.82rem;padding:9px 11px;" />
+        <label class="field-label" for="gasWebAppUrlInput" style="margin-top:0;">Google Apps Script Web App URL (<code>/exec</code>)</label>
+        <input class="input-ctrl" id="gasWebAppUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:0.82rem;padding:9px 11px;" />
+        <div class="hint" style="margin:6px 0 0;font-size:0.76rem;">
+          ضع رابط الـ Web App المنتهي بـ <code>/exec</code> هنا (أو ثبته داخل متغير <code>DEFAULT_GAS_EXEC_URL</code> في الكود) لربط صفحة GitHub مباشرة بشيت جوجل.
+        </div>
       </div>
 
       <form id="authForm">
@@ -269,6 +307,7 @@
         <input class="input-ctrl" id="organizerPin" type="password" inputmode="numeric" placeholder="••••" autocomplete="current-password" required />
 
         <button class="btn" id="loginBtn" type="submit" style="margin-top:14px;">Unlock Gate Scanner →</button>
+        <button class="btn btn-secondary hidden" id="demoModeBtn" type="button" style="margin-top:8px;font-size:0.84rem;padding:10px;">🧪 Try Offline Demo Mode (Sample Tickets)</button>
         <div id="authError" class="error-box hidden"></div>
       </form>
     </section>
@@ -288,18 +327,21 @@
 
       <!-- STEP 1: EVENT SELECTION -->
       <div>
-        <label class="field-label" for="eventSelect">1. Active Event at Gate</label>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <label class="field-label" for="eventSelect" style="margin-top:0;">1. Active Event at Gate</label>
+          <button type="button" id="refreshEventsBtn" class="btn btn-secondary" style="width:auto;padding:4px 10px;font-size:0.75rem;margin-bottom:4px;">↻ Refresh Events</button>
+        </div>
         <select class="input-ctrl" id="eventSelect">
           <option value="">Loading active events…</option>
         </select>
       </div>
 
-      <!-- STEP 2: QR SCANNER BUTTONS (SNAP & UPLOAD SEPARATED) -->
+      <!-- STEP 2: QR CAMERA & INSTANT SNAPSHOT SCANNER -->
       <div class="scanner-box">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
           <div>
             <strong style="font-size:0.95rem;color:#0f172a;">2. Scan Ticket QR Code</strong>
-            <p class="hint" style="margin:2px 0 0;font-size:0.8rem;" id="scanSubHint">choose what do you want</p>
+            <p class="hint" style="margin:2px 0 0;font-size:0.8rem;" id="scanSubHint">Use Live Camera on GitHub Pages for instant auto-detection, or snap/upload a QR photo.</p>
           </div>
         </div>
 
@@ -309,30 +351,33 @@
         </div>
 
         <div id="gasCameraInfo" class="gas-info-banner hidden">
+          💡 <strong>نصيحة سريعة داخل Google Apps Script:</strong> لأن جوجل تضع الصفحة داخل <code>iframe</code> يمنع بث الفيديو المباشر، استخدم الزر البرتقالي <strong>"📸 تصوير / رفع الـ QR"</strong> بالأسفل، أو افتح الصفحة المرفوعة على <strong>GitHub Pages</strong> لتشغيل الكاميرا المباشرة بسرعة فائقة!
         </div>
 
         <div class="scanner-actions" id="scannerActionGrid">
-          <!(Snap Camera) -->
-          <label class="btn btn-amber file-capture-label" for="snapCameraInput">
-            📸 (Snap)
-          </label>
-          <input type="file" id="snapCameraInput" accept="image/*" capture="environment" class="hidden" />
+          <button type="button" class="btn" id="startLiveCamBtn">🎥 Start Live Camera</button>
+          <button type="button" class="btn btn-danger hidden" id="stopLiveCamBtn">⏹ Stop Live Camera</button>
 
-          <!-- (Upload Photo) -->
-          <label class="btn btn-teal file-capture-label" for="uploadGalleryInput">
-          QR (Upload Photo)
+          <label class="btn btn-amber file-capture-label" for="qrFileInput" id="snapLabelBtn">
+            📸 فتح الكاميرا لتصوير / رفع الـ QR (Iframe-Safe)
           </label>
-          <input type="file" id="uploadGalleryInput" accept="image/*" class="hidden" />
-
-          <button type="button" class="btn" id="startLiveCamBtn" style="grid-column: 1 / -1;">🎥 Start Live Camera Stream</button>
-          <button type="button" class="btn btn-danger hidden" id="stopLiveCamBtn" style="grid-column: 1 / -1;">⏹ Stop Live Camera</button>
+          <input type="file" id="qrFileInput" accept="image/*" capture="environment" class="hidden" />
         </div>
 
         <!-- LIVE VIDEO PREVIEW -->
         <div id="videoContainer" class="video-wrap hidden">
-          <video id="qrVideo" playsinline muted></video>
+          <video id="qrVideo" playsinline autoplay muted></video>
           <div class="scan-reticle"></div>
+          <div class="scan-laser"></div>
+          <div class="engine-pill" id="scannerEngineLabel">HD Scanner Active</div>
         </div>
+
+        <!-- CAMERA EXTRA CONTROLS (SWITCH CAMERA & TORCH) -->
+        <div id="camSubControls" class="cam-sub-controls hidden">
+          <button type="button" class="btn btn-secondary" id="switchCamBtn">🔄 Switch Camera</button>
+          <button type="button" class="btn btn-secondary hidden" id="toggleTorchBtn">🔦 Flash / Torch</button>
+        </div>
+
         <canvas id="qrCanvas" class="hidden"></canvas>
       </div>
 
@@ -353,30 +398,31 @@
   </main>
 
   <script>
+    // ============================================================================
+    // ضع رابط Google Apps Script Web App (/exec) هنا قبل رفع الملف على GitHub Pages
+    // حتى لا يضطر المنظمون لإدخاله يدوياً على موبايلاتهم:
+    // ============================================================================
+    var DEFAULT_GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycbzS8F8w-7aoPuqeKo_EdWJkQ7mR80ezwUviQMYwmaLiPkbx1bfMXAlQm1kwOkE1kIeB/exec';
+
     var ticketEventId = ('<?= eventId ?>'.indexOf('<' + '?=') === 0) ? '' : '<?= eventId ?>';
     var ticketSerial  = ('<?= serialId ?>'.indexOf('<' + '?=') === 0) ? '' : '<?= serialId ?>';
     var openedFromQr  = ('<?= fromTicketQr ?>' === 'true');
 
     var isGasRuntime = (typeof google !== 'undefined' && google.script && google.script.run);
-    var externalGasUrl = 'https://script.google.com/macros/s/AKfycbzS8F8w-7aoPuqeKo_EdWJkQ7mR80ezwUviQMYwmaLiPkbx1bfMXAlQm1kwOkE1kIeB/exec';
+    var externalGasUrl = DEFAULT_GAS_EXEC_URL;
+    var isDemoMode = false;
 
     var demoEvents = [
-      { id: 'EVT_DEMO_2026', name: 'MMSS Annual Medical Conference 2026' },
-      { id: 'EVT_GALA_2026', name: 'MMSS Clinical Gala Dinner 2026' }
+      { id: 'EVT_DEMO_2026', name: 'MMSS Annual Medical Conference 2026 (Demo)' },
+      { id: 'EVT_GALA_2026', name: 'MMSS Clinical Gala Dinner 2026 (Demo)' }
     ];
     var demoAttendees = {
       '0001': { name: 'Dr. Ahmed Mohamed', serial: '0001', batch: 'Year 4', status: 'Dispatched', checkInTime: '', checkInBy: '' },
       '0042': { name: 'Dr. Mariam Hassan', serial: '0042', batch: 'Year 3', status: 'Verified', checkInTime: '', checkInBy: '' },
-      '0099': { name: 'Dr. Omar Khaled',    serial: '0099', batch: 'Intern 1', status: 'Checked In', checkInTime: '2026-10-28 09:30 AM', checkInBy: 'Dr. Sara' }
+      '0099': { name: 'Dr. Omar Khaled',   serial: '0099', batch: 'Intern 1', status: 'Checked In', checkInTime: '2026-10-28 09:30 AM', checkInBy: 'Dr. Sara' }
     };
 
     var qrEventId = '', qrSerial = '';
-    if (openedFromQr && ticketSerial) {
-      var parsedInit = parseQrPayload(ticketSerial, ticketEventId);
-      qrEventId = parsedInit.eventId;
-      qrSerial  = parsedInit.serial;
-    }
-
     var staffName = '';
     var authToken = '';
     var checkInBusy = false;
@@ -384,6 +430,10 @@
     var scanAnimFrame = null;
     var lastScannedCode = '';
     var lastScanTime = 0;
+    var useFrontCamera = false;
+    var torchEnabled = false;
+    var nativeBarcodeDetector = null;
+    var detectorBusy = false;
 
     function safeStorageGet(k) {
       try { return localStorage.getItem(k) || ''; } catch (e) { return ''; }
@@ -393,6 +443,17 @@
     }
     function safeStorageRemove(k) {
       try { localStorage.removeItem(k); } catch (e) {}
+    }
+
+    // Initialize hardware-accelerated BarcodeDetector if supported by the browser (Chrome Android / iOS Safari)
+    function initBarcodeDetector() {
+      if ('BarcodeDetector' in window) {
+        try {
+          nativeBarcodeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
+        } catch (e) {
+          nativeBarcodeDetector = null;
+        }
+      }
     }
 
     function isCameraBlockedByPermissionsPolicy() {
@@ -408,17 +469,40 @@
     }
 
     function initEnvironmentUI() {
-      var urlInput = document.getElementById('gasWebAppUrlInput');
-      if (urlInput && urlInput.value.trim()) {
-        externalGasUrl = urlInput.value.trim();
-        safeStorageSet('mmss_external_gas_url', externalGasUrl);
-      } else {
-        var savedUrl = safeStorageGet('mmss_external_gas_url');
+      initBarcodeDetector();
+
+      // Check URL query params for ?api=... or ?eventId=...&serial=...
+      try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('api')) {
+          externalGasUrl = params.get('api').trim();
+          safeStorageSet('mmss_external_gas_url', externalGasUrl);
+        }
+        if (params.get('eventId') && params.get('serial')) {
+          qrEventId = params.get('eventId').trim();
+          qrSerial = params.get('serial').trim();
+        }
+      } catch (e) {}
+
+      if (openedFromQr && ticketSerial) {
+        var parsedInit = parseQrPayload(ticketSerial, ticketEventId);
+        qrEventId = parsedInit.eventId;
+        qrSerial  = parsedInit.serial;
+      }
+
+      if (!isGasRuntime) {
+        var box = document.getElementById('externalGasUrlBox');
+        var demoBtn = document.getElementById('demoModeBtn');
+        var savedUrl = externalGasUrl || safeStorageGet('mmss_external_gas_url') || DEFAULT_GAS_EXEC_URL;
         if (savedUrl) {
           externalGasUrl = savedUrl;
-          if (urlInput) urlInput.value = savedUrl;
+          document.getElementById('gasWebAppUrlInput').value = savedUrl;
         }
+        // Only show the URL box if DEFAULT_GAS_EXEC_URL is not hardcoded, or allow editing it
+        if (box) box.classList.remove('hidden');
+        if (demoBtn) demoBtn.classList.remove('hidden');
       }
+
       if (isCameraBlockedByPermissionsPolicy()) {
         document.getElementById('gasCameraInfo').classList.remove('hidden');
       }
@@ -441,15 +525,25 @@
         safeStorageSet('mmss_external_gas_url', externalGasUrl);
       }
 
-      if (externalGasUrl) {
+      if (!isDemoMode && externalGasUrl) {
         var reqBody = Object.assign({ action: action }, payload || {});
         fetch(externalGasUrl, {
           method: 'POST',
+          redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(reqBody)
         })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
+        .then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status + ' when connecting to Google Apps Script.');
+          return r.text();
+        })
+        .then(function(text) {
+          var data;
+          try {
+            data = JSON.parse(text);
+          } catch (parseErr) {
+            throw new Error('Invalid JSON from Apps Script. Make sure Web App is deployed with "Who has access: Anyone" and ends with /exec.');
+          }
           if (action === 'verifyOrganizerPin') onSuccess(data.token || '');
           else if (action === 'checkOrganizerSession') onSuccess(!!data.success);
           else if (action === 'getActiveEvents') onSuccess(data.events || []);
@@ -461,15 +555,20 @@
         return;
       }
 
-      // Demo fallback
+      if (!isDemoMode && !externalGasUrl) {
+        if (onError) onError(new Error('Please paste your Google Apps Script /exec URL above, or click "Try Offline Demo Mode".'));
+        return;
+      }
+
+      // Explicit Demo Mode fallback
       setTimeout(function() {
         if (action === 'verifyOrganizerPin') onSuccess('DEMO_TOKEN');
-        else if (action === 'checkOrganizerSession') onSuccess(true);
+        else if (action === 'checkOrganizerSession') onSuccess(payload.token === 'DEMO_TOKEN');
         else if (action === 'getActiveEvents') onSuccess(demoEvents);
         else if (action === 'lookupGateTicket') {
           var k = String(payload.serial).padStart(4, '0');
           var rec = demoAttendees[k] || demoAttendees[payload.serial];
-          if (!rec) onSuccess({ status: 'INVALID', message: 'Ticket serial not found.' });
+          if (!rec) onSuccess({ status: 'INVALID', message: 'Ticket serial not found in Demo Mode (Try 0001, 0042, or 0099).' });
           else if (rec.status === 'Checked In') onSuccess({ status: 'ALREADY_USED', attendee: rec });
           else onSuccess({ status: 'SUCCESS', attendee: rec });
         } else if (action === 'verifyAndCheckIn') {
@@ -477,7 +576,7 @@
           var s = parts[0];
           var k2 = String(s).padStart(4, '0');
           var rec2 = demoAttendees[k2] || demoAttendees[s];
-          if (!rec2) onSuccess({ status: 'INVALID', message: 'Serial ID not found: ' + s });
+          if (!rec2) onSuccess({ status: 'INVALID', message: 'Serial ID not found in Demo Mode: ' + s + ' (Try 0001, 0042, or 0099).' });
           else if (rec2.status === 'Checked In') onSuccess({ status: 'ALREADY_USED', attendee: rec2 });
           else {
             rec2.status = 'Checked In';
@@ -486,7 +585,7 @@
             onSuccess({ status: 'SUCCESS', attendee: rec2 });
           }
         }
-      }, 200);
+      }, 180);
     }
 
     function parseQrPayload(rawText, fallbackEventId) {
@@ -494,13 +593,15 @@
       var evId = String(fallbackEventId || '').trim();
       if (!str) return { eventId: evId, serial: '' };
 
-      if (str.indexOf('http://') === 0 || str.indexOf('https://') === 0) {
-        var mEv = str.match(/[?&]eventId=([^&#]+)/);
-        var mSr = str.match(/[?&]serial=([^&#]+)/);
+      // 1. Full URL payload: https://script.google.com/.../exec?page=gate&eventId=EVT_...&serial=0042
+      if (/^https?:\/\//i.test(str) || (str.indexOf('eventId=') !== -1 && str.indexOf('serial=') !== -1)) {
+        var mEv = str.match(/[?&]eventId=([^&#\s]+)/i);
+        var mSr = str.match(/[?&]serial=([^&#\s]+)/i);
         if (mEv) evId = decodeURIComponent(mEv[1]);
-        if (mSr) str = decodeURIComponent(mSr[1]);
+        if (mSr) return { eventId: evId, serial: decodeURIComponent(mSr[1]).trim() };
       }
 
+      // 2. MMSS|EVT_ID|0042 format
       if (str.indexOf('MMSS|') === 0) {
         var parts = str.split('|');
         if (parts.length >= 3) {
@@ -508,16 +609,23 @@
         }
       }
 
+      // 3. 0042|MMSS or 0042|EVT_ID or EVT_ID|0042
       if (str.indexOf('|') !== -1) {
         var p2 = str.split('|');
         if (p2.length === 2) {
-          if (p2[1].trim() === 'MMSS') {
-            return { eventId: evId, serial: p2[0].trim() };
+          var left = p2[0].trim();
+          var right = p2[1].trim();
+          if (right.toUpperCase() === 'MMSS') {
+            return { eventId: evId, serial: left };
           }
-          return { eventId: p2[1].trim() || evId, serial: p2[0].trim() };
+          if (/^EVT_/i.test(left)) {
+            return { eventId: left, serial: right };
+          }
+          return { eventId: right || evId, serial: left };
         }
       }
 
+      // 4. Plain serial number
       return { eventId: evId, serial: str };
     }
 
@@ -548,6 +656,7 @@
 
     document.getElementById('authForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      isDemoMode = false;
       staffName = document.getElementById('staffName').value.trim();
       var pin = document.getElementById('organizerPin').value.trim();
       if (!staffName || !pin) return;
@@ -561,7 +670,7 @@
         btn.disabled = false;
         btn.textContent = 'Unlock Gate Scanner →';
         if (!token) {
-          showAuthError('Organizer PIN was not accepted. Check MMSS_ORGANIZER_PIN in Script Properties.');
+          showAuthError('Organizer PIN was not accepted. Check MMSS_ORGANIZER_PIN in Script Properties or CONFIG.');
           return;
         }
         authToken = token;
@@ -571,16 +680,28 @@
       }, function(err) {
         btn.disabled = false;
         btn.textContent = 'Unlock Gate Scanner →';
-        showAuthError((err && err.message) || 'Could not sign in.');
+        showAuthError((err && err.message) || 'Could not connect to Google Apps Script.');
       });
+    });
+
+    document.getElementById('demoModeBtn').addEventListener('click', function() {
+      isDemoMode = true;
+      staffName = document.getElementById('staffName').value.trim() || 'Dr. Demo Organizer';
+      authToken = 'DEMO_TOKEN';
+      enterGate();
     });
 
     document.getElementById('logoutBtn').addEventListener('click', function() {
       stopLiveCamera();
       safeStorageRemove('mmss_organizer_session');
       authToken = '';
+      isDemoMode = false;
       document.getElementById('gatePanel').classList.add('hidden');
       document.getElementById('authPanel').classList.remove('hidden');
+    });
+
+    document.getElementById('refreshEventsBtn').addEventListener('click', function() {
+      loadEvents();
     });
 
     function showAuthError(message) {
@@ -593,7 +714,17 @@
       document.getElementById('authPanel').classList.add('hidden');
       document.getElementById('gatePanel').classList.remove('hidden');
       document.getElementById('staffLabel').textContent = 'Gate staff: ' + staffName;
-      document.getElementById('envBadge').textContent = isGasRuntime ? 'Apps Script' : 'Standalone Live';
+      var badge = document.getElementById('envBadge');
+      if (isGasRuntime) {
+        badge.textContent = 'Apps Script';
+        badge.className = 'badge-pill ok';
+      } else if (!isDemoMode && externalGasUrl) {
+        badge.textContent = 'Connected to Sheet';
+        badge.className = 'badge-pill ok';
+      } else {
+        badge.textContent = 'Demo Mode';
+        badge.className = 'badge-pill warn';
+      }
       loadEvents();
       if (qrEventId && qrSerial) {
         ticketEventId = qrEventId;
@@ -603,18 +734,23 @@
     }
 
     function loadEvents() {
+      var sel = document.getElementById('eventSelect');
+      sel.innerHTML = '<option value="">Loading active events…</option>';
       callBackend('getActiveEvents', {}, function(events) {
         populateEventsDropdown(events || []);
-      }, function() {});
+      }, function(err) {
+        sel.innerHTML = '<option value="">Could not load events</option>';
+        showResult('invalid', 'Failed to load events from Google Sheet.', '<p>' + esc(err && err.message || '') + '</p>');
+      });
     }
 
     function populateEventsDropdown(events) {
       var sel = document.getElementById('eventSelect');
-      sel.innerHTML = '<option value="">-- Choose Active Event --</option>';
+      sel.innerHTML = '<option value="">-- Auto-Detect from QR or Choose Event --</option>';
       (events || []).forEach(function(ev) {
         var opt = document.createElement('option');
         opt.value = ev.id;
-        opt.textContent = ev.name;
+        opt.textContent = ev.name + ' (' + ev.id + ')';
         sel.appendChild(opt);
       });
       if (ticketEventId) {
@@ -624,41 +760,79 @@
       }
     }
 
-    // ── LIVE CAMERA ──────────────────────────────────────────────────────────────────
-    document.getElementById('startLiveCamBtn').addEventListener('click', startLiveCamera);
+    // ── HIGH-SPEED LIVE CAMERA SCANNER (BARCODEDETECTOR + JSQR DUAL ENGINE) ──────────
+    document.getElementById('startLiveCamBtn').addEventListener('click', function() {
+      startLiveCamera();
+    });
     document.getElementById('stopLiveCamBtn').addEventListener('click', stopLiveCamera);
+    document.getElementById('switchCamBtn').addEventListener('click', function() {
+      useFrontCamera = !useFrontCamera;
+      if (videoStream) {
+        stopLiveCamera();
+        startLiveCamera();
+      }
+    });
+    document.getElementById('toggleTorchBtn').addEventListener('click', function() {
+      if (!videoStream) return;
+      var track = videoStream.getVideoTracks()[0];
+      if (!track || typeof track.applyConstraints !== 'function') return;
+      torchEnabled = !torchEnabled;
+      track.applyConstraints({ advanced: [{ torch: torchEnabled }] }).catch(function() {});
+    });
 
     function startLiveCamera() {
-      var evId = document.getElementById('eventSelect').value;
-      if (!evId) {
-        showResult('invalid', 'Please select an Active Event in Step 1 first.', '');
-        return;
-      }
-
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        document.getElementById('snapCameraInput').click();
+        document.getElementById('qrFileInput').click();
         return;
       }
 
-      setStatus('Starting camera…', '');
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } },
+      setStatus('Starting HD camera…', '');
+      var facing = useFrontCamera ? 'user' : { ideal: 'environment' };
+      var constraints = {
+        video: {
+          facingMode: facing,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false
-      }).then(function(stream) {
+      };
+
+      navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
         videoStream = stream;
+        torchEnabled = false;
         var video = document.getElementById('qrVideo');
         video.srcObject = stream;
         video.setAttribute('playsinline', 'true');
         video.play();
+
+        // Check if torch is supported on this device camera
+        var track = stream.getVideoTracks()[0];
+        var torchBtn = document.getElementById('toggleTorchBtn');
+        if (track && typeof track.getCapabilities === 'function') {
+          try {
+            var caps = track.getCapabilities();
+            if (caps && caps.torch) torchBtn.classList.remove('hidden');
+            else torchBtn.classList.add('hidden');
+          } catch (e) {
+            torchBtn.classList.add('hidden');
+          }
+        }
+
+        document.getElementById('scannerEngineLabel').textContent = nativeBarcodeDetector
+          ? '⚡ Native AI + jsQR Dual Engine'
+          : '🔍 HD jsQR Scanner Active';
+
         document.getElementById('videoContainer').classList.remove('hidden');
+        document.getElementById('camSubControls').classList.remove('hidden');
         document.getElementById('startLiveCamBtn').classList.add('hidden');
         document.getElementById('stopLiveCamBtn').classList.remove('hidden');
         setStatus('Point camera at the attendee QR code…', '');
         scanAnimFrame = requestAnimationFrame(scanVideoFrame);
       }).catch(function(err) {
-        console.warn('Live stream blocked, switching to Snap camera:', err);
+        console.warn('Live stream blocked or unavailable, switching to Native Camera Capture:', err);
         document.getElementById('gasCameraInfo').classList.remove('hidden');
-        document.getElementById('snapCameraInput').click();
+        setStatus('Switching to native phone camera capture…', '');
+        document.getElementById('qrFileInput').click();
       });
     }
 
@@ -674,28 +848,71 @@
       var video = document.getElementById('qrVideo');
       if (video) video.srcObject = null;
       document.getElementById('videoContainer').classList.add('hidden');
+      document.getElementById('camSubControls').classList.add('hidden');
       document.getElementById('stopLiveCamBtn').classList.add('hidden');
       document.getElementById('startLiveCamBtn').classList.remove('hidden');
+    }
+
+    function triggerDecodedCandidate(rawText) {
+      if (!rawText) return;
+      var now = Date.now();
+      if (rawText !== lastScannedCode || (now - lastScanTime) > 3000) {
+        lastScannedCode = rawText;
+        lastScanTime = now;
+        handleDecodedQr(rawText);
+      }
     }
 
     function scanVideoFrame() {
       if (!videoStream) return;
       var video = document.getElementById('qrVideo');
-      var canvas = document.getElementById('qrCanvas');
+
       if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        var ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        // 1. Hardware-accelerated BarcodeDetector (fastest for dense URL QR codes)
+        if (nativeBarcodeDetector && !detectorBusy) {
+          detectorBusy = true;
+          nativeBarcodeDetector.detect(video).then(function(barcodes) {
+            detectorBusy = false;
+            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+              triggerDecodedCandidate(barcodes[0].rawValue);
+            }
+          }).catch(function() {
+            detectorBusy = false;
+          });
+        }
+
+        // 2. Fallback / parallel jsQR on center crop + downscaled frame
+        var canvas = document.getElementById('qrCanvas');
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        var vw = video.videoWidth;
+        var vh = video.videoHeight;
+
+        // First pass: High-detail center reticle crop (ideal for dense QR codes)
+        var cropSize = Math.min(vw, vh) * 0.72;
+        var sx = (vw - cropSize) / 2;
+        var sy = (vh - cropSize) / 2;
+        var targetDim = Math.min(520, Math.round(cropSize));
+        canvas.width = targetDim;
+        canvas.height = targetDim;
+        ctx.drawImage(video, sx, sy, cropSize, cropSize, 0, 0, targetDim, targetDim);
+        var centerData = ctx.getImageData(0, 0, targetDim, targetDim);
+
         if (typeof jsQR === 'function') {
-          var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+          var code = jsQR(centerData.data, centerData.width, centerData.height, { inversionAttempts: 'attemptBoth' });
           if (code && code.data) {
-            var now = Date.now();
-            if (code.data !== lastScannedCode || (now - lastScanTime) > 3500) {
-              lastScannedCode = code.data;
-              lastScanTime = now;
-              handleDecodedQr(code.data);
+            triggerDecodedCandidate(code.data);
+          } else {
+            // Second pass: full frame scaled to 640px width
+            var scale = Math.min(1, 640 / vw);
+            var fw = Math.round(vw * scale);
+            var fh = Math.round(vh * scale);
+            canvas.width = fw;
+            canvas.height = fh;
+            ctx.drawImage(video, 0, 0, fw, fh);
+            var fullData = ctx.getImageData(0, 0, fw, fh);
+            var codeFull = jsQR(fullData.data, fullData.width, fullData.height, { inversionAttempts: 'attemptBoth' });
+            if (codeFull && codeFull.data) {
+              triggerDecodedCandidate(codeFull.data);
             }
           }
         }
@@ -703,83 +920,102 @@
       scanAnimFrame = requestAnimationFrame(scanVideoFrame);
     }
 
-    // ── منفذ معالجة الصور المشترك (SNAP & UPLOAD) ──────────────────────────────────
-    function processImageFile(file) {
+    // ── IFRAME-SAFE SNAPSHOT / PHOTO QR SCANNER ──────────────────────────────────────
+    document.getElementById('qrFileInput').addEventListener('change', function(e) {
+      var file = e.target.files && e.target.files[0];
       if (!file) return;
-      var currentEv = document.getElementById('eventSelect').value;
-      if (!currentEv) {
-        showResult('invalid', 'Please select an Active Event in Step 1 first.', '');
-        return;
-      }
-      setStatus('Decoding QR image…', '');
+      setStatus('Decoding QR photo…', '');
+
       var reader = new FileReader();
       reader.onload = function(ev) {
         var img = new Image();
         img.onload = function() {
-          var canvas = document.getElementById('qrCanvas');
-          var ctx = canvas.getContext('2d');
-          var scales = [1, 0.75, 0.5, 0.25];
-          var decoded = null;
-          for (var i = 0; i < scales.length; i++) {
-            var s = scales[i];
-            var w = Math.max(120, Math.round(img.width * s));
-            var h = Math.max(120, Math.round(img.height * s));
-            canvas.width = w;
-            canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            var imgData = ctx.getImageData(0, 0, w, h);
-            if (typeof jsQR === 'function') {
-              var res = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
-              if (res && res.data) {
-                decoded = res.data;
-                break;
+          // Try native BarcodeDetector on the image first if available
+          if (nativeBarcodeDetector) {
+            nativeBarcodeDetector.detect(img).then(function(barcodes) {
+              if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                e.target.value = '';
+                handleDecodedQr(barcodes[0].rawValue);
+              } else {
+                decodePhotoWithJsQr(img, e.target);
               }
-            }
-          }
-          if (decoded) {
-            handleDecodedQr(decoded);
+            }).catch(function() {
+              decodePhotoWithJsQr(img, e.target);
+            });
           } else {
-            playBeep('error');
-            showResult('invalid', 'Could not detect a clear QR code.', '<p>Make sure the QR code is clear and well-lit, or type the 4-digit Serial ID manually.</p>');
+            decodePhotoWithJsQr(img, e.target);
           }
         };
         img.src = ev.target.result;
       };
       reader.readAsDataURL(file);
+    });
+
+    function decodePhotoWithJsQr(img, fileInputEl) {
+      var canvas = document.getElementById('qrCanvas');
+      var ctx = canvas.getContext('2d', { willReadFrequently: true });
+      var maxSide = Math.max(img.width, img.height);
+      var scales = [1, 1200 / maxSide, 800 / maxSide, 500 / maxSide];
+      var decoded = null;
+
+      for (var i = 0; i < scales.length; i++) {
+        var s = scales[i];
+        if (s > 1) continue;
+        var w = Math.max(160, Math.round(img.width * s));
+        var h = Math.max(160, Math.round(img.height * s));
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        var imgData = ctx.getImageData(0, 0, w, h);
+        if (typeof jsQR === 'function') {
+          var res = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
+          if (res && res.data) {
+            decoded = res.data;
+            break;
+          }
+        }
+      }
+      if (fileInputEl) fileInputEl.value = '';
+      if (decoded) {
+        handleDecodedQr(decoded);
+      } else {
+        playBeep('error');
+        showResult('invalid', 'Could not detect a clear QR code in that photo.', '<p>Make sure the QR code is flat, well-lit, and fills the center of the frame, or type the 4-digit Serial ID below.</p>');
+      }
     }
 
-    // ربط زر التقاط الكاميرا (Snap)
-    document.getElementById('snapCameraInput').addEventListener('change', function(e) {
-      var file = e.target.files && e.target.files[0];
-      processImageFile(file);
-      e.target.value = '';
-    });
-
-    // ربط زر رفع الصورة من الاستوديو (Upload Photo)
-    document.getElementById('uploadGalleryInput').addEventListener('change', function(e) {
-      var file = e.target.files && e.target.files[0];
-      processImageFile(file);
-      e.target.value = '';
-    });
-
     function handleDecodedQr(rawQrText) {
-      var selectedEv = document.getElementById('eventSelect').value;
+      var sel = document.getElementById('eventSelect');
+      var selectedEv = sel.value;
       var parsed = parseQrPayload(rawQrText, selectedEv);
       var targetEventId = parsed.eventId || selectedEv;
       var targetSerial = parsed.serial;
 
+      // Auto-select event in dropdown if QR code contains eventId and dropdown was empty
+      if (!selectedEv && parsed.eventId) {
+        var exists = Array.prototype.some.call(sel.options, function(opt) { return opt.value === parsed.eventId; });
+        if (!exists) {
+          var newOpt = document.createElement('option');
+          newOpt.value = parsed.eventId;
+          newOpt.textContent = parsed.eventId;
+          sel.appendChild(newOpt);
+        }
+        sel.value = parsed.eventId;
+        selectedEv = parsed.eventId;
+      }
+
       if (!targetEventId) {
-        showResult('invalid', 'Select an event first before scanning.', '');
+        playBeep('error');
+        showResult('invalid', 'Select an Active Event in Step 1 first.', '<p>Scanned serial <code>' + esc(targetSerial) + '</code> does not include an Event ID. Choose the event from the dropdown above.</p>');
         return;
       }
+
       if (selectedEv && parsed.eventId && parsed.eventId !== selectedEv) {
         playBeep('error');
-        showResult('invalid', 'Wrong Event Ticket', '<p>This QR ticket belongs to event <code>' + esc(parsed.eventId) + '</code>, but your scanner is set to <code>' + esc(selectedEv) + '</code>.</p>');
+        showResult('invalid', 'Wrong Event Ticket', '<p>This QR ticket belongs to event <code>' + esc(parsed.eventId) + '</code>, but your scanner is currently set to <code>' + esc(selectedEv) + '</code>.</p>');
         return;
       }
-      if (!selectedEv && parsed.eventId) {
-        document.getElementById('eventSelect').value = parsed.eventId;
-      }
+
       document.getElementById('serialInput').value = targetSerial;
 
       var autoCheckIn = document.getElementById('autoCheckInToggle').checked;
@@ -796,10 +1032,11 @@
     document.getElementById('serialSearchButton').addEventListener('click', function() {
       var eventId = document.getElementById('eventSelect').value;
       var rawSerial = document.getElementById('serialInput').value.trim();
-      if (!eventId) return showResult('invalid', 'Choose an Active Event in Step 1 first.', '');
       if (!rawSerial) return showResult('invalid', 'Enter the Serial ID printed on the ticket.', '');
       var parsed = parseQrPayload(rawSerial, eventId);
-      checkTicket(parsed.eventId || eventId, parsed.serial);
+      var finalEventId = parsed.eventId || eventId;
+      if (!finalEventId) return showResult('invalid', 'Choose an Active Event in Step 1 first.', '');
+      checkTicket(finalEventId, parsed.serial);
     });
 
     document.getElementById('serialInput').addEventListener('keydown', function(e) {
@@ -926,7 +1163,9 @@
       initEnvironmentUI();
       var token = safeStorageGet('mmss_organizer_session');
       var name = safeStorageGet('mmss_gate_staff_name');
-      if (!token || !name) return;
+      // Never auto-resume a fake DEMO_TOKEN so organizers don't get stuck in demo mode
+      if (!token || token === 'DEMO_TOKEN' || !name) return;
+      if (!isGasRuntime && !externalGasUrl) return;
       callBackend('checkOrganizerSession', { token: token }, function(ok) {
         if (ok) {
           staffName = name;
