@@ -340,6 +340,19 @@
 
     var isGasRuntime = (typeof google !== 'undefined' && google.script && google.script.run);
     var externalGasUrl = sanitizeGasUrl(DEFAULT_GAS_EXEC_URL);
+    try {
+      var urlParamsInit = new URLSearchParams(window.location.search);
+      var apiParamInit = urlParamsInit.get('api') || urlParamsInit.get('gasUrl');
+      if (apiParamInit) {
+        externalGasUrl = sanitizeGasUrl(apiParamInit);
+        try { localStorage.setItem('mmss_gas_webapp_url', externalGasUrl); } catch (e) {}
+      } else {
+        var savedGasUrl = localStorage.getItem('mmss_gas_webapp_url');
+        if (savedGasUrl && /^https?:\/\//i.test(savedGasUrl)) {
+          externalGasUrl = sanitizeGasUrl(savedGasUrl);
+        }
+      }
+    } catch (e) {}
 
     var fallbackActiveEvents = [
       {
