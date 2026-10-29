@@ -420,20 +420,36 @@
       <!-- ==================== TAB 2: PAYMENT VERIFICATION ==================== -->
       <div class="tab-panel" id="tab-payments">
         <div class="panel-card">
-          <div class="panel-card-header">
+          <div class="panel-card-header flex-wrap gap-2">
             <span>💳 Payment Verification Queue</span>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <button type="button" class="btn btn-sm btn-success fw-bold" id="bulkVerifyBtn" onclick="bulkVerifySelectedRows()" style="display:none;">
+                ✓ Verify Selected (<span id="bulkVerifyCount">0</span>)
+              </button>
               <input type="text" id="searchInput" class="form-control form-control-sm"
-                     placeholder="Search name / serial / ref..." style="width:240px;"
+                     placeholder="Search name / ID / phone / ref..." style="width:230px;"
                      oninput="filterTable()" />
+              <button class="btn btn-sm btn-outline-success fw-bold" onclick="exportSubmissionsToCsv()">📥 Export Excel / CSV</button>
               <button class="btn btn-sm btn-outline-secondary" onclick="loadSubmissions()">↻ Refresh</button>
             </div>
+          </div>
+          <!-- Quick Status Filter Pills -->
+          <div class="px-3 py-2 bg-light border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex gap-1 flex-wrap" id="paymentStatusFilterGroup">
+              <button type="button" class="btn btn-sm btn-dark fw-bold py-1 px-2" data-filter="all" onclick="setPaymentStatusFilter('all')">All (<span id="cnt-all">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline-warning text-dark fw-bold py-1 px-2" data-filter="Pending" onclick="setPaymentStatusFilter('Pending')">⏳ Pending (<span id="cnt-Pending">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline-success fw-bold py-1 px-2" data-filter="Verified" onclick="setPaymentStatusFilter('Verified')">✅ Verified (<span id="cnt-Verified">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline-primary fw-bold py-1 px-2" data-filter="Dispatched" onclick="setPaymentStatusFilter('Dispatched')">🎟️ Dispatched (<span id="cnt-Dispatched">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline-info text-dark fw-bold py-1 px-2" data-filter="Checked In" onclick="setPaymentStatusFilter('Checked In')">🚪 Checked In (<span id="cnt-CheckedIn">0</span>)</button>
+              <button type="button" class="btn btn-sm btn-outline-danger fw-bold py-1 px-2" data-filter="Rejected" onclick="setPaymentStatusFilter('Rejected')">❌ Rejected (<span id="cnt-Rejected">0</span>)</button>
+            </div>
+            <div class="small text-muted">Select pending rows to bulk-verify with 1 click</div>
           </div>
           <div style="overflow-x:auto;">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th style="width:36px;"><input type="checkbox" class="form-check-input" id="selectAllPendingCheck" onchange="toggleSelectAllPending(this.checked)" title="Select all visible Pending rows" /></th>
                   <th>Serial</th>
                   <th>Name</th>
                   <th>Email</th>
@@ -607,9 +623,11 @@
                   </div>
 
                   <div class="col-md-5" id="customSlideWrap" style="display:none;">
-                    <label class="form-label fw-bold">Google Slides Template ID</label>
-                    <input type="text" class="form-control font-monospace" id="customSlideIdInput" placeholder="Paste template ID or full Google Slides URL..." />
-                    <div class="form-text">Use &lt;&lt;Name&gt;&gt;, &lt;&lt;Serial&gt;&gt;, &lt;&lt;EventName&gt;&gt;, &lt;&lt;Description&gt;&gt;, and a shape titled QR. The Apps Script owner must have edit access.</div>
+                    <label class="form-label fw-bold">Google Slides Template URL or ID</label>
+                    <input type="text" class="form-control font-monospace" id="customSlideIdInput" placeholder="Paste full Google Slides URL or ID..." />
+                    <div class="form-text">
+                      Supported tags: <code>&lt;&lt;Name&gt;&gt;</code> (or <code>{{Name}}</code>), <code>&lt;&lt;Serial&gt;&gt;</code>, <code>&lt;&lt;ID&gt;&gt;</code>, <code>&lt;&lt;Batch&gt;&gt;</code>, <code>&lt;&lt;EventName&gt;&gt;</code>, and <code>&lt;&lt;QR&gt;&gt;</code> (or any box/image titled <code>QR</code> — auto-centered as a 1:1 square QR).
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1579,6 +1597,11 @@
             setTimeout(function() { okCb({ success: true }); }, 150);
           });
         },
+        bulkUpdatePaymentStatus: function(evId, rowIndexes, newStatus) {
+          callAdminGasApi('bulkUpdatePaymentStatus', { eventId: evId, rowIndexes: JSON.stringify(rowIndexes || []), newStatus: newStatus || 'Verified', token: token }, okCb, errCb, function() {
+            setTimeout(function() { okCb({ success: true, updatedCount: (rowIndexes || []).length }); }, 200);
+          });
+        },
         rejectPayment: function(evId, rowIndex, reason) {
           callAdminGasApi('rejectPayment', { eventId: evId, rowIndex: rowIndex, reason: reason, token: token }, okCb, errCb, function() {
             setTimeout(function() { okCb({ success: true, studentEmail: 'student@mans.edu.eg' }); }, 150);
@@ -1738,8 +1761,17 @@
     if (tab === 'events') loadAllEvents();
   }
 
+  function syncEventSlideIdToDispatcher() {
+    var ev = (allEvents || []).find(function(x) { return String(x.id) === String(selectedEventId); });
+    var slideInput = document.getElementById('customSlideIdInput');
+    if (ev && ev.slideId && slideInput && !slideInput.value.trim()) {
+      slideInput.value = ev.slideId;
+    }
+  }
+
   function onGlobalEventChange() {
     selectedEventId = document.getElementById('globalEventPicker').value;
+    syncEventSlideIdToDispatcher();
     selectedRecipientRows = {};
     dispatcherSubmissions = [];
     document.getElementById('dispatcherRecipientsBody').innerHTML = '<tr><td colspan="6" class="text-muted text-center py-3">Choose an event and refresh.</td></tr>';
@@ -1783,7 +1815,7 @@
             '<td>' +
               '<div class="d-flex gap-1">' +
                 '<button class="btn btn-sm btn-outline-primary" onclick="editEventForm(\'' + ev.id + '\')" title="Edit questions and fields">✏️ Edit Form</button>' +
-                '<a class="btn btn-sm btn-outline-success" href="' + escHtml(ev.receiverFormUrl || '#') + '" target="_blank" rel="noopener" title="Open this event’s payment receiver form">💰 Receiver form</a>' +
+                '<a class="btn btn-sm btn-outline-success" href="' + escHtml(buildReceiverUrlForEvent(ev)) + '" target="_blank" rel="noopener" title="Open this event’s payment receiver form">💰 Receiver form</a>' +
                 '<button class="btn btn-sm btn-outline-secondary" onclick="copyReceiverFormLink(\'' + escHtml(ev.id) + '\')" title="Copy event-specific receiver form link">🔗 Copy link</button>' +
                 '<button class="btn btn-sm btn-primary" onclick="saveEventSlideSetting(\'' + ev.id + '\', this)" title="Save Slides template">💾 Save</button>' +
                 '<button class="btn btn-sm ' + (isActive ? 'btn-outline-danger' : 'btn-outline-success') + '" onclick="toggleEvent(\'' + ev.id + '\', ' + !isActive + ')">' +
@@ -1813,17 +1845,31 @@
       .updateEventSettings({ eventId: evId, slideTemplateId: slideVal });
   }
 
+  function buildReceiverUrlForEvent(ev) {
+    if (!ev) return '#';
+    var isGas = (typeof google !== 'undefined' && google.script && google.script.run);
+    if (!isGas && window.location.protocol.indexOf('http') === 0) {
+      var base = window.location.href.split('?')[0].split('#')[0];
+      var folderUrl = base.substring(0, base.lastIndexOf('/') + 1);
+      var keyMatch = String(ev.receiverFormUrl || '').match(/[?&]key=([^&]+)/);
+      var keyParam = keyMatch ? keyMatch[1] : 'GITHUB_RECEIVER';
+      return folderUrl + 'ReceiverPayment.html?eventId=' + encodeURIComponent(ev.id) + '&eventName=' + encodeURIComponent(ev.name || '') + '&key=' + keyParam + '&api=' + encodeURIComponent(activeAdminGasUrl);
+    }
+    return ev.receiverFormUrl || '#';
+  }
+
   function copyReceiverFormLink(evId) {
     var ev = allEvents.find(function(item) { return String(item.id) === String(evId); });
-    if (!ev || !ev.receiverFormUrl) { toast('Deploy the web app before sharing a receiver form link.', 'error'); return; }
+    if (!ev) { toast('Event not found.', 'error'); return; }
+    var targetUrl = buildReceiverUrlForEvent(ev);
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(ev.receiverFormUrl).then(function() {
-        toast('Receiver form link copied! Share it with the payment receiver.', 'success');
+      navigator.clipboard.writeText(targetUrl).then(function() {
+        toast('✅ Receiver form link copied! Share it with the payment receiver.', 'success');
       }).catch(function() {
-        fallbackCopyText(ev.receiverFormUrl);
+        fallbackCopyText(targetUrl);
       });
     } else {
-      fallbackCopyText(ev.receiverFormUrl);
+      fallbackCopyText(targetUrl);
     }
   }
 
@@ -2149,6 +2195,86 @@
   }
 
   // Payment Verification with Reject Modal
+  var activePaymentStatusFilter = 'all';
+  var selectedPendingRows = {};
+
+  function updatePaymentFilterCounts() {
+    var counts = { all: allSubmissions.length, Pending: 0, Verified: 0, Dispatched: 0, CheckedIn: 0, Rejected: 0 };
+    allSubmissions.forEach(function(r) {
+      var st = String(r['Ticket_Status'] || 'Pending').trim();
+      if (st === 'Checked In') counts.CheckedIn++;
+      else if (counts[st] !== undefined) counts[st]++;
+    });
+    ['all', 'Pending', 'Verified', 'Dispatched', 'CheckedIn', 'Rejected'].forEach(function(k) {
+      var el = document.getElementById('cnt-' + k);
+      if (el) el.textContent = counts[k] || 0;
+    });
+  }
+
+  function setPaymentStatusFilter(filterVal) {
+    activePaymentStatusFilter = filterVal || 'all';
+    var grp = document.getElementById('paymentStatusFilterGroup');
+    if (grp) {
+      grp.querySelectorAll('button').forEach(function(b) {
+        var isMatch = b.getAttribute('data-filter') === activePaymentStatusFilter;
+        b.classList.toggle('btn-dark', isMatch);
+        b.classList.toggle('text-white', isMatch);
+      });
+    }
+    filterTable();
+  }
+
+  function updateBulkVerifyButtonUI() {
+    var keys = Object.keys(selectedPendingRows).filter(function(k) { return selectedPendingRows[k]; });
+    var btn = document.getElementById('bulkVerifyBtn');
+    var cnt = document.getElementById('bulkVerifyCount');
+    if (cnt) cnt.textContent = keys.length;
+    if (btn) btn.style.display = keys.length > 0 ? 'inline-block' : 'none';
+  }
+
+  function togglePendingRowSelect(rowIndex, isChecked) {
+    if (isChecked) selectedPendingRows[rowIndex] = true;
+    else delete selectedPendingRows[rowIndex];
+    updateBulkVerifyButtonUI();
+  }
+
+  function toggleSelectAllPending(isChecked) {
+    document.querySelectorAll('.pending-row-check').forEach(function(cb) {
+      cb.checked = !!isChecked;
+      var rIdx = Number(cb.getAttribute('data-row'));
+      if (isChecked) selectedPendingRows[rIdx] = true;
+      else delete selectedPendingRows[rIdx];
+    });
+    updateBulkVerifyButtonUI();
+  }
+
+  function bulkVerifySelectedRows() {
+    var rowIndexes = Object.keys(selectedPendingRows).filter(function(k) { return selectedPendingRows[k]; }).map(Number);
+    if (!rowIndexes.length) return;
+    var btn = document.getElementById('bulkVerifyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Verifying ' + rowIndexes.length + '...';
+    sessionRun('admin')
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        if (res && res.success) {
+          selectedPendingRows = {};
+          updateBulkVerifyButtonUI();
+          toast('✅ Verified ' + (res.updatedCount || rowIndexes.length) + ' registrations in bulk!', 'success');
+          loadSubmissions();
+        } else {
+          toast('Error: ' + (res && res.error || 'Bulk verify failed'), 'error');
+          updateBulkVerifyButtonUI();
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        toast('Error: ' + err.message, 'error');
+        updateBulkVerifyButtonUI();
+      })
+      .bulkUpdatePaymentStatus(selectedEventId, rowIndexes, 'Verified');
+  }
+
   function loadSubmissions() {
     if (!selectedEventId) { toast('Select an active event first.', 'error'); return; }
     var tbody = document.getElementById('submissionsBody');
@@ -2157,7 +2283,12 @@
     sessionRun('admin')
       .withSuccessHandler(function(res) {
         allSubmissions = (res && res.data) || [];
-        renderSubmissionsTable(allSubmissions);
+        selectedPendingRows = {};
+        updateBulkVerifyButtonUI();
+        var selAll = document.getElementById('selectAllPendingCheck');
+        if (selAll) selAll.checked = false;
+        updatePaymentFilterCounts();
+        filterTable();
       })
       .withFailureHandler(function(err) {
         tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-danger">Error: ' + escHtml(err.message) + '</td></tr>';
@@ -2169,7 +2300,7 @@
     var tbody = document.getElementById('submissionsBody');
     tbody.innerHTML = '';
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted">No submissions found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted">No submissions match this filter.</td></tr>';
       return;
     }
 
@@ -2184,24 +2315,35 @@
         ? '<button type="button" class="btn btn-sm btn-outline-success py-0" onclick="viewPaymentProof(' + row.rowIndex + ', \'receiver\')" title="' + escHtml(row.Receiver_Proof_At || '') + '">Receiver</button>'
         : '<span class="receiver-missing">Missing proof</span>';
 
+      var pdfUrl = String(row['Ticket_PDF_URL'] || '').trim();
+      var pdfBtnHtml = (/^https?:\/\//i.test(pdfUrl))
+        ? ' <a href="' + escHtml(pdfUrl) + '" target="_blank" rel="noopener" class="btn btn-sm btn-outline-dark py-0 px-2" title="Open Ticket PDF">📄 PDF</a>'
+        : '';
+
       var actionHtml = '';
       if (status === 'Pending') {
         actionHtml =
           '<button class="btn btn-sm btn-success me-1" onclick="verifyPayment(' + row.rowIndex + ', this)">✓ Verify</button>' +
           '<button class="btn btn-sm btn-outline-danger" onclick="openRejectModal(' + row.rowIndex + ')">Reject</button>';
       } else if (status === 'Verified') {
-        actionHtml = '<button class="btn btn-sm btn-outline-danger" onclick="openRejectModal(' + row.rowIndex + ')">Reject</button>';
+        actionHtml = '<button class="btn btn-sm btn-outline-danger" onclick="openRejectModal(' + row.rowIndex + ')">Reject</button>' + pdfBtnHtml;
       } else {
-        actionHtml = '<span class="text-muted small">' + escHtml(status) + '</span>';
+        actionHtml = '<span class="text-muted small me-1">' + escHtml(status) + '</span>' + pdfBtnHtml;
       }
+
+      var checkCellHtml = (status === 'Pending')
+        ? '<input type="checkbox" class="form-check-input pending-row-check" data-row="' + row.rowIndex + '" ' + (selectedPendingRows[row.rowIndex] ? 'checked' : '') + ' onchange="togglePendingRowSelect(' + row.rowIndex + ', this.checked)" />'
+        : '<span class="text-muted small">' + (idx + 1) + '</span>';
 
       var tr = document.createElement('tr');
       if (!row.Receiver_Proof_Available) tr.classList.add('missing-receiver-row');
+      var stIdVal = row['Student_ID'] || row['Student ID'] || row['University ID'] || row['ID'] || '';
+      var phoneInfo = formatAdminPhoneDisplay(row['Phone'] || '');
       tr.innerHTML =
-        '<td>' + (idx + 1) + '</td>' +
+        '<td>' + checkCellHtml + '</td>' +
         '<td><code class="fw-bold">' + escHtml(row['Serial_ID'] || '') + '</code></td>' +
-        '<td><strong>' + escHtml(row['Full_Name'] || '') + '</strong></td>' +
-        '<td class="small">' + escHtml(row['Email'] || '') + '</td>' +
+        '<td><strong>' + escHtml(row['Full_Name'] || '') + '</strong>' + (stIdVal ? '<div class="text-muted font-monospace" style="font-size:0.75rem;">🪪 ID: ' + escHtml(stIdVal) + '</div>' : '') + '</td>' +
+        '<td class="small"><div>' + escHtml(row['Email'] || '') + '</div>' + phoneInfo.html + '</td>' +
         '<td class="small">' + escHtml(row['Batch'] || '—') + '</td>' +
         '<td><code class="small">' + escHtml(row['InstaPay_Ref'] || '') + '</code></td>' +
         '<td>' + studentProofHtml + '</td>' +
@@ -2255,15 +2397,93 @@
       .getPaymentProof(selectedEventId, rowIndex, type);
   }
 
+  function normalizeAdminPhoneDigits(rawPhone) {
+    var raw = String(rawPhone || '').trim();
+    if (!raw) return '';
+    var hasPlus = raw.indexOf('+') === 0;
+    var d = raw.replace(/\D/g, '');
+    if (!d) return '';
+    if (!hasPlus && d.indexOf('00') === 0 && d.length >= 10) { d = d.slice(2); hasPlus = true; }
+    var mTrunk = d.match(/^(20|60|44|90|91|92|966|971|965|974|973|968|962|970|972|249|963|964|967|218|212|213|216|234)0(\d{7,11})$/);
+    if (mTrunk) d = mTrunk[1] + mTrunk[2];
+    if (!hasPlus && /^01[0125]\d{8}$/.test(d)) return '2' + d;
+    if (!hasPlus && /^1[0125]\d{8}$/.test(d)) return '20' + d;
+    if (!hasPlus && /^05\d{8}$/.test(d)) return '966' + d.slice(1);
+    if (!hasPlus && /^01[2-9]\d{7}$/.test(d)) return '60' + d.slice(1);
+    return d;
+  }
+
+  function formatAdminPhoneDisplay(rawPhone) {
+    var e164 = normalizeAdminPhoneDigits(rawPhone);
+    if (!e164) return { e164: '', html: '' };
+    var flag = '🌍';
+    if (e164.indexOf('20') === 0) flag = '🇪🇬';
+    else if (e164.indexOf('60') === 0) flag = '🇲🇾';
+    else if (e164.indexOf('966') === 0) flag = '🇸🇦';
+    else if (e164.indexOf('971') === 0) flag = '🇦🇪';
+    else if (e164.indexOf('965') === 0) flag = '🇰🇼';
+    else if (e164.indexOf('974') === 0) flag = '🇶🇦';
+    else if (e164.indexOf('973') === 0) flag = '🇧🇭';
+    else if (e164.indexOf('968') === 0) flag = '🇴🇲';
+    else if (e164.indexOf('962') === 0) flag = '🇯🇴';
+    else if (e164.indexOf('970') === 0 || e164.indexOf('972') === 0) flag = '🇵🇸';
+    else if (e164.indexOf('249') === 0) flag = '🇸🇩';
+    else if (e164.indexOf('963') === 0) flag = '🇸🇾';
+    else if (e164.indexOf('964') === 0) flag = '🇮🇶';
+    else if (e164.indexOf('967') === 0) flag = '🇾🇪';
+    else if (e164.indexOf('218') === 0) flag = '🇱🇾';
+    else if (e164.indexOf('44') === 0) flag = '🇬🇧';
+    var html = '<div class="mt-1 d-flex align-items-center gap-1">' +
+      '<span class="font-monospace text-muted" style="font-size:0.75rem;">' + flag + ' +' + escHtml(e164) + '</span>' +
+      '<a href="https://wa.me/' + escHtml(e164) + '" target="_blank" rel="noopener" class="badge bg-success text-white text-decoration-none" style="font-size:0.65rem;" title="Open direct WhatsApp chat">💬 WA</a>' +
+      '</div>';
+    return { e164: '+' + e164, html: html };
+  }
+
+  function exportSubmissionsToCsv() {
+    if (!allSubmissions || !allSubmissions.length) {
+      toast('No submissions loaded to export.', 'error');
+      return;
+    }
+    var cols = ['Serial_ID', 'Student_ID', 'Full_Name', 'Batch', 'Phone', 'Email', 'InstaPay_Ref', 'Ticket_Status', 'WhatsApp_Sent_By', 'CheckIn_Timestamp', 'CheckIn_By'];
+    var csvRows = [cols.join(',')];
+    allSubmissions.forEach(function(r) {
+      var line = cols.map(function(c) {
+        var val = r[c];
+        if (c === 'Student_ID' && !val) val = r['Student ID'] || r['University ID'] || '';
+        var str = String(val == null ? '' : val).replace(/"/g, '""');
+        return '"' + str + '"';
+      });
+      csvRows.push(line.join(','));
+    });
+    var csvContent = '\uFEFF' + csvRows.join('\r\n');
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'MMSS_Submissions_' + (selectedEventId || 'All') + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('✅ Exported ' + allSubmissions.length + ' records to Excel/CSV!', 'success');
+  }
+
   function filterTable() {
-    var q = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (!q) { renderSubmissionsTable(allSubmissions); return; }
+    var q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
     var filtered = allSubmissions.filter(function(r) {
+      var st = String(r['Ticket_Status'] || 'Pending').trim();
+      if (activePaymentStatusFilter !== 'all' && st !== activePaymentStatusFilter) return false;
+      if (!q) return true;
+      var stId = String(r['Student_ID'] || r['Student ID'] || r['University ID'] || '').toLowerCase();
+      var ph = String(r['Phone'] || '').toLowerCase();
       return (
         String(r['Full_Name'] || '').toLowerCase().includes(q) ||
         String(r['Serial_ID'] || '').toLowerCase().includes(q) ||
         String(r['InstaPay_Ref'] || '').toLowerCase().includes(q) ||
-        String(r['Email'] || '').toLowerCase().includes(q)
+        String(r['Email'] || '').toLowerCase().includes(q) ||
+        stId.includes(q) ||
+        ph.includes(q)
       );
     });
     renderSubmissionsTable(filtered);
@@ -2342,6 +2562,7 @@
   function onTemplateStyleChange() {
     var style = document.getElementById('dispatchTemplateStyle').value;
     document.getElementById('customSlideWrap').style.display = (style === 'custom_slides') ? 'block' : 'none';
+    if (style === 'custom_slides') syncEventSlideIdToDispatcher();
   }
 
   function toggleWhatsApp() {
@@ -2601,8 +2822,34 @@
     if (el) el.textContent = count + ' selected';
   }
 
+  function extractCleanSlideId(rawVal) {
+    var text = String(rawVal || '').trim();
+    var m = text.match(/\/presentation\/d\/([\w-]+)/) || text.match(/[?&]id=([\w-]+)/);
+    return m ? m[1] : text;
+  }
+
   function openDesignPreview() {
     var style = document.getElementById('dispatchTemplateStyle').value;
+    if (style === 'custom_slides') {
+      syncEventSlideIdToDispatcher();
+      var rawSlide = document.getElementById('customSlideIdInput').value.trim();
+      var cleanId = extractCleanSlideId(rawSlide);
+      if (!cleanId) {
+        toast('Please paste your Google Slides URL or ID first to preview it.', 'error');
+        return;
+      }
+      var embedUrl = 'https://docs.google.com/presentation/d/' + encodeURIComponent(cleanId) + '/embed?start=false&loop=false&delayms=3000';
+      document.getElementById('ticketPreviewBody').innerHTML =
+        '<div class="text-white text-start mb-3 p-3 rounded-3" style="background:rgba(255,255,255,0.08);border:1px solid rgba(200,171,117,0.4);">' +
+          '<div class="fw-bold text-warning mb-1">📄 Custom Google Slides Template Preview (ID: <code>' + escHtml(cleanId) + '</code>)</div>' +
+          '<div class="small text-light">During dispatch, the system automatically replaces <code>&lt;&lt;Name&gt;&gt;</code> / <code>{{Name}}</code>, <code>&lt;&lt;Serial&gt;&gt;</code> / <code>{{Serial}}</code>, <code>&lt;&lt;ID&gt;&gt;</code> / <code>{{StudentID}}</code>, <code>&lt;&lt;Batch&gt;&gt;</code> / <code>{{Batch}}</code>, and places a <strong>1:1 square QR code</strong> inside <code>&lt;&lt;QR&gt;&gt;</code> / <code>{{QR}}</code> (or in the bottom-right corner if no QR tag is present).</div>' +
+        '</div>' +
+        '<div class="ratio ratio-16x9 rounded-3 overflow-hidden border border-secondary">' +
+          '<iframe src="' + embedUrl + '" allowfullscreen="true" style="border:0;background:#111;"></iframe>' +
+        '</div>';
+      previewModal.show();
+      return;
+    }
     var previewHtml = getExactTicketTableHtml(style, 'Dr. Ahmed Mohamed', '0042', 'MMSS Annual Conference 2026', 'Year 3');
     document.getElementById('ticketPreviewBody').innerHTML = previewHtml;
     previewModal.show();
