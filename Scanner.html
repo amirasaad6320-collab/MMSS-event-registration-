@@ -312,6 +312,17 @@
         <select class="input-ctrl" id="eventSelect">
           <option value="">Loading active events…</option>
         </select>
+
+        <!-- LIVE GATE ATTENDANCE COUNTER -->
+        <div id="gateLiveStatsBar" style="margin-top:10px;padding:10px 14px;border-radius:12px;background:#fdf8f6;border:1.5px solid #e6d3ce;">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;font-weight:800;color:#7b1f20;">
+            <span id="gateCheckedInLabel">🚪 Checked In: 0 / 0 (0%)</span>
+            <span id="gateRemainingLabel" style="color:#475569;">🎟️ Remaining: 0</span>
+          </div>
+          <div style="height:7px;width:100%;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:6px;">
+            <div id="gateStatsProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#16a34a,#15803d);transition:width 0.3s ease;"></div>
+          </div>
+        </div>
       </div>
 
       <!-- STEP 2: 3 SCANNER BUTTONS (FROM PDF/PHOTO, CAMERA, LIVE) -->
@@ -374,6 +385,15 @@
           <input class="input-ctrl" id="serialInput" inputmode="text" placeholder="Enter Serial ID (e.g. 0042)" autocomplete="off" />
           <button class="btn" id="serialSearchButton" type="button" style="width:auto;min-width:175px;">Search &amp; Check In</button>
         </div>
+      </div>
+
+      <!-- RECENT GATE SCANS LOG (LAST 5 SCANS) -->
+      <div class="manual-section" id="recentScansSection" style="margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <strong style="font-size:0.88rem;color:#0f172a;">🕒 Recent Gate Scans (This Device)</strong>
+          <span style="font-size:0.74rem;color:#64748b;" id="recentScansCountLabel">0 scans</span>
+        </div>
+        <div id="recentScansList" style="font-size:0.8rem;color:#64748b;">No tickets scanned in this session yet.</div>
       </div>
     </section>
   </main>
@@ -512,6 +532,16 @@
           onSuccess(true);
         } else if (action === 'getActiveEvents') {
           onSuccess(localFallbackEvents);
+        } else if (action === 'getGateLiveStats') {
+          var totalKeys = Object.keys(localFallbackAttendees);
+          var chkCount = totalKeys.filter(function(k) { return localFallbackAttendees[k].status === 'Checked In'; }).length;
+          onSuccess({
+            success: true,
+            checkedIn: chkCount,
+            totalEligible: totalKeys.length,
+            remaining: Math.max(0, totalKeys.length - chkCount),
+            rate: totalKeys.length ? Math.round((chkCount / totalKeys.length) * 100) : 0
+          });
         } else if (action === 'lookupGateTicket') {
           var pLook = parseQrPayload(payload.serial, payload.eventId);
           var k = String(pLook.serial || '').padStart(4, '0');
@@ -580,6 +610,7 @@
         else if (action === 'getActiveEvents') runner.getActiveEvents();
         else if (action === 'lookupGateTicket') runner.lookupGateTicket(payload.eventId, payload.serial, payload.token);
         else if (action === 'verifyAndCheckIn') runner.verifyAndCheckIn(payload.eventId, payload.scannedData, payload.staffName, payload.token);
+        else if (action === 'getGateLiveStats') runner.getGateLiveStats(payload.eventId, payload.token);
         return;
       }
 
@@ -769,6 +800,63 @@
         sel.value = ticketEventId;
       } else if (events && events.length >= 1) {
         sel.value = events[0].id;
+      }
+      refreshGateLiveStats();
+    }
+
+    var recentGateScans = [];
+
+    document.getElementById('eventSelect').addEventListener('change', function() {
+      refreshGateLiveStats();
+    });
+
+    function updateGateStatsUI(stats) {
+      if (!stats) return;
+      var chk = Number(stats.checkedIn) || 0;
+      var tot = Number(stats.totalEligible) || 0;
+      var rem = Math.max(0, tot - chk);
+      var rate = tot > 0 ? Math.round((chk / tot) * 100) : 0;
+      var lbl1 = document.getElementById('gateCheckedInLabel');
+      var lbl2 = document.getElementById('gateRemainingLabel');
+      var bar = document.getElementById('gateStatsProgressBar');
+      if (lbl1) lbl1.textContent = '🚪 Checked In: ' + chk + ' / ' + tot + ' (' + rate + '%)';
+      if (lbl2) lbl2.textContent = '🎟️ Remaining: ' + rem;
+      if (bar) bar.style.width = Math.min(100, rate) + '%';
+    }
+
+    function refreshGateLiveStats() {
+      var evId = document.getElementById('eventSelect').value;
+      if (!evId || !authToken) return;
+      callBackend('getGateLiveStats', { eventId: evId, token: authToken }, function(res) {
+        if (res && (res.success || res.totalEligible !== undefined)) {
+          updateGateStatsUI(res);
+        }
+      }, function() {});
+    }
+
+    function recordRecentGateScan(status, serial, attendeeObj) {
+      var item = {
+        status: status,
+        serial: serial || (attendeeObj && attendeeObj.serial) || '—',
+        name: (attendeeObj && attendeeObj.name) || 'Unknown',
+        batch: (attendeeObj && attendeeObj.batch) || '',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      };
+      recentGateScans.unshift(item);
+      if (recentGateScans.length > 5) recentGateScans.pop();
+      var listEl = document.getElementById('recentScansList');
+      var cntEl = document.getElementById('recentScansCountLabel');
+      if (cntEl) cntEl.textContent = recentGateScans.length + (recentGateScans.length === 1 ? ' scan' : ' scans');
+      if (listEl) {
+        listEl.innerHTML = recentGateScans.map(function(s) {
+          var badge = s.status === 'success'
+            ? '<span style="color:#15803d;font-weight:800;">✓ Checked In</span>'
+            : (s.status === 'duplicate' ? '<span style="color:#b45309;font-weight:800;">⚠️ Already Used</span>' : '<span style="color:#dc2626;font-weight:800;">❌ Invalid</span>');
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">' +
+            '<div><code>#' + esc(s.serial) + '</code> <strong>' + esc(s.name) + '</strong>' + (s.batch ? ' <span style="color:#64748b;">(' + esc(s.batch) + ')</span>' : '') + '</div>' +
+            '<div style="text-align:right;">' + badge + ' <span style="color:#94a3b8;font-size:0.72rem;margin-left:4px;">' + esc(s.time) + '</span></div>' +
+          '</div>';
+        }).join('');
       }
     }
 
@@ -1223,6 +1311,12 @@
         details += '<p>' + esc(res.message || 'Invalid ticket.') + '</p>';
       }
       showResult(status, title, details);
+      recordRecentGateScan(status, a.serial || serial, a);
+      if (res && res.gateStats) {
+        updateGateStatsUI(res.gateStats);
+      } else {
+        refreshGateLiveStats();
+      }
     }
 
     function showResult(status, title, details) {
