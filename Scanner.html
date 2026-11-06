@@ -1245,8 +1245,12 @@
       }
     });
 
+    // FIFO scan queue: never drop a decoded ticket just because another request is running.
+    var gateScanQueue = [];
+    var gateQueueRunning = false;
+    var gateScansSinceStats = 0;
+
     function checkTicket(eventId, serial, rawPayload) {
-      if (checkInBusy) return;
       var payloadToSend = (rawPayload && String(rawPayload).indexOf('MMSS|') === 0)
         ? String(rawPayload)
         : (String(serial) + '|' + String(eventId));
@@ -1254,27 +1258,43 @@
         addOfflineScan(eventId, serial, payloadToSend);
         return;
       }
-      checkInBusy = true;
-      setStatus('Verifying & checking in ticket #' + serial + '…', '');
+      gateScanQueue.push({ eventId: eventId, serial: serial, payload: payloadToSend });
+      if (gateScanQueue.length > 1) {
+        setStatus('Scan queued (' + gateScanQueue.length + ') — processing automatically…', '');
+      }
+      processNextGateScan();
+    }
 
+    function processNextGateScan() {
+      if (gateQueueRunning || !gateScanQueue.length) return;
+      gateQueueRunning = true;
+      checkInBusy = true;
+      var job = gateScanQueue.shift();
+      setStatus('Checking #' + job.serial + '…', '');
       callBackend('verifyAndCheckIn', {
-        eventId: eventId,
-        scannedData: payloadToSend,
+        eventId: job.eventId,
+        scannedData: job.payload,
         staffName: staffName,
         token: authToken
       }, function(res) {
+        gateQueueRunning = false;
         checkInBusy = false;
         if (res && res.status === 'SUCCESS') playBeep('success');
         else playBeep('error');
-        renderResult(res || { status: 'INVALID', message: 'No server response.' }, serial);
-      }, function(err) {
-        checkInBusy = false;
-        if (!navigator.onLine) {
-          addOfflineScan(eventId, serial, payloadToSend);
-          return;
+        renderResult(res || { status: 'INVALID', message: 'No server response.' }, job.serial);
+        if (gateScanQueue.length) {
+          setStatus('Next scan… (' + gateScanQueue.length + ' waiting)', '');
+          processNextGateScan();
         }
-        playBeep('error');
-        showResult('invalid', (err && err.message) || 'Verification error.', '');
+      }, function(err) {
+        gateQueueRunning = false;
+        checkInBusy = false;
+        if (!navigator.onLine) addOfflineScan(job.eventId, job.serial, job.payload);
+        else {
+          playBeep('error');
+          showResult('invalid', (err && err.message) || 'Verification error.', '');
+        }
+        if (gateScanQueue.length) processNextGateScan();
       });
     }
 
@@ -1325,23 +1345,18 @@
     function renderResult(res, serial) {
       var a = res.attendee || {};
       var status = res.status === 'SUCCESS' ? 'success' : res.status === 'ALREADY_USED' ? 'duplicate' : 'invalid';
-      var title = status === 'success' ? '✅ Admission Approved — Welcome!' : status === 'duplicate' ? '⚠️ Duplicate Scan — Already Checked In' : '❌ Ticket Not Accepted';
-      var details = '';
-      if (a.name) details += '<p><b>Attendee:</b> ' + esc(a.name) + '</p>';
-      if (a.serial || serial) details += '<p><b>Serial ID:</b> <code>' + esc(a.serial || serial) + '</code></p>';
-      if (a.batch) details += '<p><b>Batch:</b> ' + esc(a.batch) + '</p>';
-      if (status === 'duplicate') {
-        details += '<p><b>First Check-In:</b> ' + esc(a.checkInTime || '') + '</p><p><b>Checked In By:</b> ' + esc(a.checkInBy || 'Not recorded on earlier scan') + '</p>';
-      } else if (status === 'success') {
-        details += '<p><b>Checked In By:</b> ' + esc(staffName) + '</p><p><b>Time:</b> ' + new Date().toLocaleString() + '</p>';
-      } else {
-        details += '<p>' + esc(res.message || 'Invalid ticket.') + '</p>';
-      }
+      var title = status === 'success' ? '✓ CHECKED IN' : status === 'duplicate' ? '⚠ ALREADY CHECKED IN' : '✕ NOT ADMITTED';
+      var name = a.name || 'Unknown attendee';
+      var state = status === 'success' ? 'Ticket: Checked In' : status === 'duplicate' ? 'Ticket: Already Used' : ('Ticket: ' + (a.ticketStatus || 'Invalid'));
+      var details = '<div style="font-size:1.15rem;font-weight:800;margin-bottom:5px;">' + esc(name) + '</div>' +
+        '<div style="font-weight:700;">' + esc(state) + '</div>';
       showResult(status, title, details);
       recordRecentGateScan(status, a.serial || serial, a);
-      if (res && res.gateStats) {
-        updateGateStatsUI(res.gateStats);
-      } else {
+      // Do not run an expensive spreadsheet-wide stats query on every scan.
+      gateScansSinceStats++;
+      if (res && res.gateStats) updateGateStatsUI(res.gateStats);
+      else if (gateScansSinceStats >= 10) {
+        gateScansSinceStats = 0;
         refreshGateLiveStats();
       }
     }
