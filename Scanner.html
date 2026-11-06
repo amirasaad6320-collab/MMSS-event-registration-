@@ -985,7 +985,7 @@
       if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
         var now = Date.now();
         var hasNative = !!nativeBarcodeDetector;
-        if (hasNative && !detectorBusy && now - lastNativeScanAt >= 60) {
+        if (hasNative && !detectorBusy && now - lastNativeScanAt >= 40) {
           detectorBusy = true;
           lastNativeScanAt = now;
           nativeBarcodeDetector.detect(video).then(function(barcodes) {
@@ -994,17 +994,17 @@
         }
 
         // Keep the JS fallback off the hot path when the browser's native scanner is available.
-        var fallbackInterval = hasNative ? 500 : 180;
+        var fallbackInterval = hasNative ? 250 : 120;
         if (typeof jsQR === 'function' && now - lastFallbackScanAt >= fallbackInterval) {
           lastFallbackScanAt = now;
           var canvas = document.getElementById('qrCanvas');
           var ctx = qrCanvasContext || (qrCanvasContext = canvas.getContext('2d', { willReadFrequently: true }));
           var vw = video.videoWidth;
           var vh = video.videoHeight;
-          var cropSize = Math.min(vw, vh) * 0.72;
+          var cropSize = Math.min(vw, vh) * 0.85;
           var sx = (vw - cropSize) / 2;
           var sy = (vh - cropSize) / 2;
-          var targetDim = Math.min(420, Math.round(cropSize));
+          var targetDim = Math.min(480, Math.round(cropSize));
           if (canvas.width !== targetDim || canvas.height !== targetDim) {
             canvas.width = targetDim;
             canvas.height = targetDim;
@@ -1014,10 +1014,10 @@
           var code = jsQR(centerData.data, centerData.width, centerData.height, { inversionAttempts: 'dontInvert' });
           if (code && code.data) {
             triggerDecodedCandidate(code.data);
-          } else if (now - lastFullFrameScanAt >= 1500) {
+          } else if (now - lastFullFrameScanAt >= 1000) {
             // Rare full-frame retry catches QR codes held outside the guide without slowing every scan.
             lastFullFrameScanAt = now;
-            var scale = Math.min(1, 480 / vw);
+            var scale = Math.min(1, 560 / vw);
             var fw = Math.round(vw * scale);
             var fh = Math.round(vh * scale);
             if (canvas.width !== fw || canvas.height !== fh) {
