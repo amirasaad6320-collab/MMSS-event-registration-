@@ -407,6 +407,10 @@
       <!-- RESULT DISPLAY -->
       <div id="resultBox" class="status">Ready to scan or search a ticket.</div>
       <div id="resultDetails" class="result-card hidden"></div>
+      <div id="offlineQueueBanner" class="status" style="display:none;margin-top:10px;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;">
+        <span id="offlineQueueMessage"></span>
+        <button type="button" id="syncOfflineScansBtn" class="btn btn-amber" style="display:none;margin-left:8px;padding:7px 10px;">Sync now</button>
+      </div>
 
       <!-- STEP 3: MANUAL SERIAL SEARCH -->
       <div class="manual-section" id="manualSearch">
@@ -452,12 +456,7 @@
     }
 
     var localFallbackEvents = [];
-    var localFallbackAttendees = {
-      '0001': { name: 'Dr. Ahmed Mohamed', serial: '0001', batch: 'Year 4', status: 'Dispatched', checkInTime: '', checkInBy: '' },
-      '0002': { name: 'Dr. Sara Ali',      serial: '0002', batch: 'Year 3', status: 'Verified',   checkInTime: '', checkInBy: '' },
-      '0042': { name: 'Dr. Mariam Hassan', serial: '0042', batch: 'Year 3', status: 'Verified',   checkInTime: '', checkInBy: '' },
-      '0099': { name: 'Dr. Omar Khaled',   serial: '0099', batch: 'Intern 1', status: 'Checked In', checkInTime: '2026-10-28 09:30 AM', checkInBy: 'Dr. Sara' }
-    };
+    var localFallbackAttendees = {};
 
     var qrEventId = '', qrSerial = '';
     var staffName = '';
@@ -475,6 +474,7 @@
     var lastFallbackScanAt = 0;
     var lastFullFrameScanAt = 0;
     var qrCanvasContext = null;
+    var resultHideTimer = null;
 
     function safeStorageGet(k) {
       try { return localStorage.getItem(k) || ''; } catch (e) { return ''; }
@@ -523,107 +523,9 @@
       }
     }
 
-    // JSONP fallback helper (completely immune to CORS and POST redirect blocks)
-    function callJsonp(baseUrl, queryObj, onSuccess, onError) {
-      var cbName = 'mmss_jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-      var script = document.createElement('script');
-      var timer = setTimeout(function() {
-        cleanup();
-        if (onError) onError(new Error('Request timed out'));
-      }, 10000);
-
-      function cleanup() {
-        clearTimeout(timer);
-        try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
-        if (script && script.parentNode) script.parentNode.removeChild(script);
-      }
-
-      window[cbName] = function(data) {
-        cleanup();
-        onSuccess(data);
-      };
-
-      var qs = Object.keys(queryObj).map(function(k) {
-        return encodeURIComponent(k) + '=' + encodeURIComponent(queryObj[k] == null ? '' : String(queryObj[k]));
-      }).join('&');
-
-      script.src = baseUrl + (baseUrl.indexOf('?') === -1 ? '?' : '&') + qs + '&callback=' + cbName;
-      script.onerror = function() {
-        cleanup();
-        if (onError) onError(new Error('JSONP connection error'));
-      };
-      document.head.appendChild(script);
-    }
-
     // Local fallback handler so "Failed to fetch" never blocks the scanner
-    function runLocalFallback(action, payload, onSuccess) {
-      setTimeout(function() {
-        if (action === 'verifyOrganizerPin') {
-          onSuccess('LOCAL_SESSION_TOKEN');
-        } else if (action === 'checkOrganizerSession') {
-          onSuccess(true);
-        } else if (action === 'getActiveEvents') {
-          onSuccess(localFallbackEvents);
-        } else if (action === 'getGateLiveStats') {
-          var totalKeys = Object.keys(localFallbackAttendees);
-          var chkCount = totalKeys.filter(function(k) { return localFallbackAttendees[k].status === 'Checked In'; }).length;
-          onSuccess({
-            success: true,
-            checkedIn: chkCount,
-            totalEligible: totalKeys.length,
-            remaining: Math.max(0, totalKeys.length - chkCount),
-            rate: totalKeys.length ? Math.round((chkCount / totalKeys.length) * 100) : 0
-          });
-        } else if (action === 'lookupGateTicket') {
-          var pLook = parseQrPayload(payload.serial, payload.eventId);
-          var k = String(pLook.serial || '').padStart(4, '0');
-          var storageKey = 'mmss_used_' + (pLook.eventId || payload.eventId || 'EVT') + '_' + k;
-          var savedUsed = safeStorageGet(storageKey);
-          var rec = localFallbackAttendees[k] || localFallbackAttendees[pLook.serial] || {
-            name: 'Attendee #' + k,
-            serial: k,
-            batch: 'General',
-            status: 'Verified',
-            checkInTime: '',
-            checkInBy: ''
-          };
-          if (savedUsed) {
-            try { rec = JSON.parse(savedUsed); } catch (e) { rec.status = 'Checked In'; }
-          }
-          if (rec.status === 'Checked In') onSuccess({ status: 'ALREADY_USED', message: 'Single-use QR ticket has already been scanned and checked in.', attendee: rec });
-          else onSuccess({ status: 'SUCCESS', attendee: rec });
-        } else if (action === 'verifyAndCheckIn') {
-          var pScan = parseQrPayload(payload.scannedData, payload.eventId);
-          var s = pScan.serial || '';
-          var k2 = String(s).padStart(4, '0');
-          var storageKey2 = 'mmss_used_' + (pScan.eventId || payload.eventId || 'EVT') + '_' + k2;
-          var savedUsed2 = safeStorageGet(storageKey2);
-          var rec2 = localFallbackAttendees[k2] || localFallbackAttendees[s];
-          if (!rec2) {
-            rec2 = {
-              name: 'Verified Attendee #' + k2,
-              serial: k2,
-              batch: 'General',
-              status: 'Verified',
-              checkInTime: '',
-              checkInBy: ''
-            };
-            localFallbackAttendees[k2] = rec2;
-          }
-          if (savedUsed2) {
-            try { rec2 = JSON.parse(savedUsed2); } catch (e) { rec2.status = 'Checked In'; }
-          }
-          if (rec2.status === 'Checked In') {
-            onSuccess({ status: 'ALREADY_USED', message: 'Single-use QR ticket has already been scanned and checked in.', attendee: rec2 });
-          } else {
-            rec2.status = 'Checked In';
-            rec2.checkInTime = new Date().toLocaleTimeString();
-            rec2.checkInBy = payload.staffName || 'Gate Staff';
-            safeStorageSet(storageKey2, JSON.stringify(rec2));
-            onSuccess({ status: 'SUCCESS', message: 'Admission approved! Ticket is now marked as used.', attendee: rec2 });
-          }
-        }
-      }, 150);
+    function runLocalFallback(action, payload, onSuccess, onError) {
+      if (onError) onError(new Error('Secure server connection required. Local ticket validation is disabled.'));
     }
 
     function dispatchApiResponse(action, data, onSuccess) {
@@ -649,16 +551,13 @@
       // 2. External GitHub Pages with configured GAS URL (GET with credentials:'omit' -> JSONP fallback -> Local fallback)
       if (externalGasUrl && /^https?:\/\//i.test(externalGasUrl)) {
         var queryObj = Object.assign({ action: action }, payload || {});
-        var qs = Object.keys(queryObj).map(function(k) {
-          return encodeURIComponent(k) + '=' + encodeURIComponent(queryObj[k] == null ? '' : String(queryObj[k]));
-        }).join('&');
-        var getUrl = externalGasUrl + (externalGasUrl.indexOf('?') === -1 ? '?' : '&') + qs;
-
-        fetch(getUrl, {
-          method: 'GET',
+        fetch(externalGasUrl, {
+          method: 'POST',
           mode: 'cors',
           credentials: 'omit',
-          redirect: 'follow'
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(queryObj)
         })
         .then(function(r) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -667,13 +566,8 @@
         .then(function(data) {
           dispatchApiResponse(action, data, onSuccess);
         })
-        .catch(function() {
-          // Try JSONP before falling back locally
-          callJsonp(externalGasUrl, queryObj, function(data) {
-            dispatchApiResponse(action, data, onSuccess);
-          }, function() {
-            runLocalFallback(action, payload, onSuccess);
-          });
+        .catch(function(err) {
+          if (onError) onError(err);
         });
         return;
       }
@@ -801,6 +695,8 @@
       document.getElementById('authPanel').classList.add('hidden');
       document.getElementById('gatePanel').classList.remove('hidden');
       document.getElementById('staffLabel').textContent = 'Gate staff: ' + staffName;
+      renderOfflineQueueStatus();
+      flushOfflineScanQueue();
       loadEvents();
       if (qrEventId && qrSerial) {
         ticketEventId = qrEventId;
@@ -841,6 +737,92 @@
     }
 
     var recentGateScans = [];
+    var OFFLINE_SCAN_QUEUE_KEY = 'mmss_gate_offline_scan_queue_v1';
+    var offlineSyncBusy = false;
+
+    function readOfflineScanQueue() {
+      try {
+        var parsed = JSON.parse(safeStorageGet(OFFLINE_SCAN_QUEUE_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) { return []; }
+    }
+
+    function writeOfflineScanQueue(queue) {
+      safeStorageSet(OFFLINE_SCAN_QUEUE_KEY, JSON.stringify(queue || []));
+      renderOfflineQueueStatus();
+    }
+
+    function renderOfflineQueueStatus() {
+      var banner = document.getElementById('offlineQueueBanner');
+      var message = document.getElementById('offlineQueueMessage');
+      var button = document.getElementById('syncOfflineScansBtn');
+      if (!banner || !message || !button) return;
+      var count = readOfflineScanQueue().length;
+      var offline = !navigator.onLine;
+      banner.style.display = (count || offline) ? 'block' : 'none';
+      message.textContent = offline
+        ? ('⚠️ Offline. ' + count + ' scan(s) saved on this device; entry is NOT confirmed yet.')
+        : (count ? ('⏳ ' + count + ' scan(s) awaiting server confirmation.') : '');
+      button.style.display = count && navigator.onLine ? 'inline-block' : 'none';
+    }
+
+    function addOfflineScan(eventId, serial, scannedData) {
+      var queue = readOfflineScanQueue();
+      var serialKey = String(serial || '').replace(/\D/g, '');
+      var existing = queue.some(function(item) {
+        return String(item.eventId) === String(eventId) && String(item.serial).replace(/\D/g, '') === serialKey;
+      });
+      if (existing) {
+        showResult('duplicate', '⏳ This ticket is already waiting to sync', '<p><b>Serial ID:</b> <code>' + esc(serial) + '</code></p><p>It has not been confirmed at the server yet.</p>');
+        return;
+      }
+      queue.push({ id: String(Date.now()) + '-' + Math.random().toString(36).slice(2), eventId: String(eventId), serial: String(serial || ''), scannedData: String(scannedData || ''), staffName: String(staffName || 'Gate Staff'), scannedAt: new Date().toISOString() });
+      writeOfflineScanQueue(queue);
+      playBeep('error');
+      showResult('duplicate', '⏳ Saved offline — entry not confirmed', '<p><b>Serial ID:</b> <code>' + esc(serial) + '</code></p><p>This scan is stored on this device and will be checked when the connection returns. Do not treat it as admitted until it says Checked In.</p>');
+      recordRecentGateScan('queued', serial, { name: 'Awaiting server confirmation' });
+    }
+
+    function flushOfflineScanQueue() {
+      if (!navigator.onLine || !authToken || offlineSyncBusy) { renderOfflineQueueStatus(); return; }
+      var queue = readOfflineScanQueue();
+      if (!queue.length) { renderOfflineQueueStatus(); return; }
+      offlineSyncBusy = true;
+      renderOfflineQueueStatus();
+      function sendNext() {
+        var current = readOfflineScanQueue();
+        if (!current.length) {
+          offlineSyncBusy = false;
+          renderOfflineQueueStatus();
+          refreshGateLiveStats();
+          return;
+        }
+        var item = current[0];
+        callBackend('verifyAndCheckIn', { eventId: item.eventId, scannedData: item.scannedData, staffName: item.staffName, token: authToken }, function(res) {
+          var msg = String((res && (res.message || res.error)) || '');
+          if (!res || res.success === false || /session expired|authorization|server error/i.test(msg)) {
+            offlineSyncBusy = false;
+            renderOfflineQueueStatus();
+            showResult('invalid', 'Sync paused — sign-in or server check required', '<p>' + esc(msg || 'The server could not confirm this scan.') + '</p><p>The saved scan remains on this device.</p>');
+            return;
+          }
+          current.shift();
+          writeOfflineScanQueue(current);
+          renderResult(res, (res.attendee && res.attendee.serial) || item.serial);
+          sendNext();
+        }, function() {
+          offlineSyncBusy = false;
+          renderOfflineQueueStatus();
+          showResult('invalid', 'Sync paused — connection unavailable', '<p>The saved scan remains on this device and will retry when the connection returns.</p>');
+        });
+      }
+      sendNext();
+    }
+
+    window.addEventListener('online', function() { renderOfflineQueueStatus(); flushOfflineScanQueue(); });
+    window.addEventListener('offline', renderOfflineQueueStatus);
+    document.getElementById('syncOfflineScansBtn').addEventListener('click', flushOfflineScanQueue);
+    renderOfflineQueueStatus();
 
     document.getElementById('eventSelect').addEventListener('change', function() {
       refreshGateLiveStats();
@@ -887,7 +869,7 @@
         listEl.innerHTML = recentGateScans.map(function(s) {
           var badge = s.status === 'success'
             ? '<span style="color:#15803d;font-weight:800;">✓ Checked In</span>'
-            : (s.status === 'duplicate' ? '<span style="color:#b45309;font-weight:800;">⚠️ Already Used</span>' : '<span style="color:#dc2626;font-weight:800;">❌ Invalid</span>');
+            : (s.status === 'queued' ? '<span style="color:#b45309;font-weight:800;">⏳ Pending sync — not confirmed</span>' : (s.status === 'duplicate' ? '<span style="color:#b45309;font-weight:800;">⚠️ Already Used</span>' : '<span style="color:#dc2626;font-weight:800;">❌ Invalid</span>'));
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;">' +
             '<div><code>#' + esc(s.serial) + '</code> <strong>' + esc(s.name) + '</strong>' + (s.batch ? ' <span style="color:#64748b;">(' + esc(s.batch) + ')</span>' : '') + '</div>' +
             '<div style="text-align:right;">' + badge + ' <span style="color:#94a3b8;font-size:0.72rem;margin-left:4px;">' + esc(s.time) + '</span></div>' +
@@ -927,8 +909,8 @@
       var constraints = {
         video: {
           facingMode: facing,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 960 },
+          height: { ideal: 540 }
         },
         audio: false
       };
@@ -989,7 +971,8 @@
     function triggerDecodedCandidate(rawText) {
       if (!rawText) return;
       var now = Date.now();
-      if (rawText !== lastScannedCode || (now - lastScanTime) > 3000) {
+      if (rawText !== lastScannedCode || (now - lastScanTime) > 20000) {
+        clearScanResultTimer();
         lastScannedCode = rawText;
         lastScanTime = now;
         handleDecodedQr(rawText);
@@ -1002,7 +985,7 @@
       if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
         var now = Date.now();
         var hasNative = !!nativeBarcodeDetector;
-        if (hasNative && !detectorBusy && now - lastNativeScanAt >= 100) {
+        if (hasNative && !detectorBusy && now - lastNativeScanAt >= 60) {
           detectorBusy = true;
           lastNativeScanAt = now;
           nativeBarcodeDetector.detect(video).then(function(barcodes) {
@@ -1011,7 +994,7 @@
         }
 
         // Keep the JS fallback off the hot path when the browser's native scanner is available.
-        var fallbackInterval = hasNative ? 900 : 220;
+        var fallbackInterval = hasNative ? 500 : 180;
         if (typeof jsQR === 'function' && now - lastFallbackScanAt >= fallbackInterval) {
           lastFallbackScanAt = now;
           var canvas = document.getElementById('qrCanvas');
@@ -1264,12 +1247,15 @@
 
     function checkTicket(eventId, serial, rawPayload) {
       if (checkInBusy) return;
-      checkInBusy = true;
-      setStatus('Verifying & checking in ticket #' + serial + '…', '');
-
       var payloadToSend = (rawPayload && String(rawPayload).indexOf('MMSS|') === 0)
         ? String(rawPayload)
         : (String(serial) + '|' + String(eventId));
+      if (!navigator.onLine) {
+        addOfflineScan(eventId, serial, payloadToSend);
+        return;
+      }
+      checkInBusy = true;
+      setStatus('Verifying & checking in ticket #' + serial + '…', '');
 
       callBackend('verifyAndCheckIn', {
         eventId: eventId,
@@ -1283,6 +1269,10 @@
         renderResult(res || { status: 'INVALID', message: 'No server response.' }, serial);
       }, function(err) {
         checkInBusy = false;
+        if (!navigator.onLine) {
+          addOfflineScan(eventId, serial, payloadToSend);
+          return;
+        }
         playBeep('error');
         showResult('invalid', (err && err.message) || 'Verification error.', '');
       });
@@ -1357,6 +1347,7 @@
     }
 
     function showResult(status, title, details) {
+      clearScanResultTimer();
       var box = document.getElementById('resultBox');
       box.className = 'status ' + status;
       box.textContent = title;
@@ -1364,6 +1355,11 @@
       if (details) {
         det.innerHTML = details;
         det.classList.remove('hidden');
+        resultHideTimer = setTimeout(function() {
+          det.innerHTML = '';
+          det.classList.add('hidden');
+          resultHideTimer = null;
+        }, 20000);
       } else {
         det.innerHTML = '';
         det.classList.add('hidden');
@@ -1371,12 +1367,20 @@
     }
 
     function setStatus(text, kind) {
+      clearScanResultTimer();
       var box = document.getElementById('resultBox');
       box.className = 'status ' + (kind || '');
       box.textContent = text;
       var det = document.getElementById('resultDetails');
       det.innerHTML = '';
       det.classList.add('hidden');
+    }
+
+    function clearScanResultTimer() {
+      if (resultHideTimer) {
+        clearTimeout(resultHideTimer);
+        resultHideTimer = null;
+      }
     }
 
     function esc(s) {
@@ -1396,7 +1400,14 @@
           authToken = token;
           enterGate();
         }
-      }, function() {});
+      }, function() {
+        if (!navigator.onLine) {
+          staffName = name;
+          authToken = token;
+          enterGate();
+          setStatus('Offline scanner ready. Scans will stay pending until the server confirms them.', '');
+        }
+      });
     }
 
     resumeSession();
