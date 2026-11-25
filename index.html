@@ -475,12 +475,64 @@
       z-index: 2000;
       display: none;
     }
+    .hero-padel-decor {
+      position: absolute;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .hero-padel-racket-left { left: 16px; top: 18px; width: 72px; height: 72px; opacity: 0.72; transform: rotate(-16deg); }
+    .hero-padel-racket-right { right: 16px; top: 18px; width: 72px; height: 72px; opacity: 0.72; transform: rotate(16deg); }
+    .hero-padel-ball-left { left: 26px; bottom: 18px; width: 34px; height: 34px; opacity: 0.88; }
+    .hero-padel-ball-right { right: 26px; bottom: 18px; width: 34px; height: 34px; opacity: 0.88; transform: rotate(-40deg); }
+    .whatsapp-confirm-box {
+      background: #fcf9f4;
+      border: 2px solid #c8ab75;
+      border-radius: 18px;
+      padding: 18px;
+      text-align: left;
+      margin: 16px 0;
+    }
+    .whatsapp-msg-preview {
+      background: #ffffff;
+      border: 1px solid #e6dcc8;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.8rem;
+      color: #334155;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      margin: 10px 0 12px;
+    }
+    .btn-whatsapp-confirm {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 11px 20px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 0.92rem;
+      color: #ffffff !important;
+      text-decoration: none;
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      border: 1.5px solid #c8ab75;
+      box-shadow: 0 8px 20px rgba(21, 128, 61, 0.28);
+      transition: transform 0.15s ease;
+    }
+    .btn-whatsapp-confirm:hover {
+      transform: translateY(-1px);
+      color: #ffffff;
+    }
     @media (max-width: 576px) {
       .vip-ticket-body { grid-template-columns: 1fr; gap: 10px; }
       .step-pill { font-size: 0.67rem; padding: 5px 4px; }
+      .hero-padel-racket-left, .hero-padel-racket-right { width: 52px; height: 52px; opacity: 0.35; }
+      .hero-padel-ball-left, .hero-padel-ball-right { width: 26px; height: 26px; opacity: 0.65; }
     }
   </style>
-<script src="/_aistudio-iframe.js?v=29045eb3"></script></head>
+</head>
 <body>
 
   <canvas id="confettiCanvas"></canvas>
@@ -500,6 +552,34 @@
   <div class="journey-container" id="registerCard">
     <!-- Cinematic Hero Banner -->
     <div class="hero-card" id="heroSection">
+      <!-- Padel Rackets & Balls Sports Motifs -->
+      <svg class="hero-padel-decor hero-padel-racket-left" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M32 6C21 6 14 14 14 25C14 34 20 40 26 42L28 49V58C28 59.6 29.3 61 31 61H33C34.7 61 36 59.6 36 58V49L38 42C44 40 50 34 50 25C50 14 43 6 32 6Z" fill="#7b1f20" stroke="#c8ab75" stroke-width="2.5" stroke-linejoin="round"/>
+        <ellipse cx="32" cy="24" rx="13.5" ry="14.5" fill="#241718" stroke="#c8ab75" stroke-width="1.6"/>
+        <circle cx="26" cy="17" r="1.4" fill="#f5ebd6"/><circle cx="32" cy="16" r="1.4" fill="#f5ebd6"/><circle cx="38" cy="17" r="1.4" fill="#f5ebd6"/>
+        <circle cx="24" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="29.5" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="34.5" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="40" cy="23" r="1.4" fill="#f5ebd6"/>
+        <circle cx="26" cy="29" r="1.4" fill="#f5ebd6"/><circle cx="32" cy="30" r="1.4" fill="#f5ebd6"/><circle cx="38" cy="29" r="1.4" fill="#f5ebd6"/>
+        <path d="M29 41L32 46L35 41" stroke="#c8ab75" stroke-width="2" stroke-linecap="round"/><rect x="29" y="50" width="6" height="9" rx="2" fill="#f5ebd6"/>
+      </svg>
+      <svg class="hero-padel-decor hero-padel-racket-right" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M32 6C21 6 14 14 14 25C14 34 20 40 26 42L28 49V58C28 59.6 29.3 61 31 61H33C34.7 61 36 59.6 36 58V49L38 42C44 40 50 34 50 25C50 14 43 6 32 6Z" fill="#7b1f20" stroke="#c8ab75" stroke-width="2.5" stroke-linejoin="round"/>
+        <ellipse cx="32" cy="24" rx="13.5" ry="14.5" fill="#241718" stroke="#c8ab75" stroke-width="1.6"/>
+        <circle cx="26" cy="17" r="1.4" fill="#f5ebd6"/><circle cx="32" cy="16" r="1.4" fill="#f5ebd6"/><circle cx="38" cy="17" r="1.4" fill="#f5ebd6"/>
+        <circle cx="24" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="29.5" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="34.5" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="40" cy="23" r="1.4" fill="#f5ebd6"/>
+        <circle cx="26" cy="29" r="1.4" fill="#f5ebd6"/><circle cx="32" cy="30" r="1.4" fill="#f5ebd6"/><circle cx="38" cy="29" r="1.4" fill="#f5ebd6"/>
+        <path d="M29 41L32 46L35 41" stroke="#c8ab75" stroke-width="2" stroke-linecap="round"/><rect x="29" y="50" width="6" height="9" rx="2" fill="#f5ebd6"/>
+      </svg>
+      <svg class="hero-padel-decor hero-padel-ball-left" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <circle cx="32" cy="32" r="27" fill="#bef264" stroke="#c8ab75" stroke-width="3"/>
+        <path d="M15 13C24 22 24 42 15 51" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M49 13C40 22 40 42 49 51" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+      </svg>
+      <svg class="hero-padel-decor hero-padel-ball-right" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <circle cx="32" cy="32" r="27" fill="#bef264" stroke="#c8ab75" stroke-width="3"/>
+        <path d="M15 13C24 22 24 42 15 51" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M49 13C40 22 40 42 49 51" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+      </svg>
+
       <div class="hero-crest-wrap">
         <div class="hero-crest-ring"></div>
         <img class="brand-icon" src="data:image/jpeg;base64,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" alt="Mansoura Manchester Students Society Crest" />
@@ -535,6 +615,57 @@
             </select>
           </div>
 
+          <div class="mb-3" id="trackPickerWrap" style="display:none;">
+            <label class="form-label d-block">Choose Your Padel Funday Track *</label>
+            <div class="row g-2" id="trackChoiceGrid">
+              <div class="col-md-6">
+                <button type="button" id="trackBtn_tournament" onclick="selectRegistrationTrack('tournament')" class="w-100 text-start p-3" style="border-radius:14px;border:2px solid #7b1f20;background:linear-gradient(135deg,#7b1f20,#4a1213);color:#f5ebd6;transition:all 0.2s;box-shadow:0 8px 18px rgba(123,31,32,0.22);">
+                  <div class="d-flex justify-content-between align-items-center mb-1 gap-2">
+                    <span class="d-inline-flex align-items-center gap-2">
+                      <svg width="26" height="26" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+                        <g transform="rotate(-32 40 40)"><path d="M40 8C30 8 24 15 24 25C24 33 29 38 35 40L37 47V64C37 65.5 38.2 67 40 67C41.8 67 43 65.5 43 64V47L45 40C51 38 56 33 56 25C56 15 50 8 40 8Z" fill="#7b1f20" stroke="#c8ab75" stroke-width="3"/><ellipse cx="40" cy="24" rx="11.5" ry="12.5" fill="#241718" stroke="#c8ab75" stroke-width="2"/></g>
+                        <g transform="rotate(32 40 40)"><path d="M40 8C30 8 24 15 24 25C24 33 29 38 35 40L37 47V64C37 65.5 38.2 67 40 67C41.8 67 43 65.5 43 64V47L45 40C51 38 56 33 56 25C56 15 50 8 40 8Z" fill="#4a1213" stroke="#c8ab75" stroke-width="3"/><ellipse cx="40" cy="24" rx="11.5" ry="12.5" fill="#1a1112" stroke="#c8ab75" stroke-width="2"/></g>
+                        <circle cx="40" cy="18" r="10" fill="#bef264" stroke="#ffffff" stroke-width="2"/>
+                      </svg>
+                      <span class="fw-bold" id="trackTitle_tournament" style="font-size:1rem;">🏆 Padel Tournament</span>
+                    </span>
+                    <span class="badge" id="trackPriceBadge_tournament" style="background:#c8ab75;color:#241718;font-weight:800;">500 EGP / Team</span>
+                  </div>
+                  <div class="small" id="trackSub_tournament" style="opacity:0.92;">Doubles Team · 2 Players · 1 Shared Payment</div>
+                </button>
+              </div>
+              <div class="col-md-6">
+                <button type="button" id="trackBtn_sports_day" onclick="selectRegistrationTrack('sports_day')" class="w-100 text-start p-3" style="border-radius:14px;border:1.5px solid #c8ab75;background:#fdf8f6;color:#241718;transition:all 0.2s;">
+                  <div class="d-flex justify-content-between align-items-center mb-1 gap-2">
+                    <span class="d-inline-flex align-items-center gap-2">
+                      <svg width="24" height="24" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                        <circle cx="32" cy="32" r="27" fill="#bef264" stroke="#c8ab75" stroke-width="3"/>
+                        <path d="M15 13C24 22 24 42 15 51" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+                        <path d="M49 13C40 22 40 42 49 51" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+                      </svg>
+                      <span class="fw-bold" id="trackTitle_sports_day" style="font-size:1rem;color:#7b1f20;">🎾 Sports Day</span>
+                    </span>
+                    <span class="badge" id="trackPriceBadge_sports_day" style="background:#7b1f20;color:#f5ebd6;font-weight:800;">250 EGP / Player</span>
+                  </div>
+                  <div class="small text-muted" id="trackSub_sports_day">Individual Pass · 1 Player</div>
+                </button>
+              </div>
+            </div>
+
+            <div id="trackDetailsCard" class="mt-3 p-3" style="border-radius:14px;background:#fdfbf7;border:1.5px solid #c8ab75;color:#241718;">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <div class="fw-bold" id="trackDetailHeading" style="color:#7b1f20;font-size:1rem;">🏆 Padel Tournament Details</div>
+                <span class="badge" id="trackDetailModeBadge" style="background:#f5ebd6;color:#4a1213;border:1px solid #c8ab75;">2 Players · 1 Receipt</span>
+              </div>
+              <div class="row g-2 small mb-2" id="trackDetailMetaRow">
+                <div class="col-sm-6" id="trackDetailScheduleWrap"></div>
+                <div class="col-sm-6" id="trackDetailVenueWrap"></div>
+              </div>
+              <div class="small" id="trackDetailDesc" style="line-height:1.55;color:#342526;"></div>
+              <div class="small fw-bold mt-2 pt-2 border-top" id="trackDetailInstaPayWrap" style="color:#7b1f20;border-color:#e6d3ce !important;"></div>
+            </div>
+          </div>
+
           <div class="mb-3" id="eventDetailsToggleWrap">
             <button type="button" id="toggleEventDetailsBtn" onclick="toggleEventDetailsCard()" class="btn btn-sm fw-bold px-3 py-2" style="border-radius:999px;background:#fdf8f6;border:1.5px solid #c8ab75;color:#7b1f20;font-size:0.82rem;transition:all 0.2s;">
               📋 Show Event Details ▾
@@ -551,7 +682,7 @@
           </div>
 
           <div class="text-end mt-2">
-            <a href="#stepCard2" class="next-step-link">Continue to Student Profile ↓</a>
+            <a href="#stepCard2" class="next-step-link">Continue to Player Profile ↓</a>
           </div>
         </section>
 
@@ -561,11 +692,22 @@
             <div class="step-title-group">
               <span class="step-badge">02</span>
               <div>
-                <h3 class="step-heading">Student Identity &amp; Contact</h3>
-                <p class="step-subheading">Each Student ID and WhatsApp number can only register once per event</p>
+                <h3 class="step-heading" id="step2Heading">Student Identity &amp; Contact</h3>
+                <p class="step-subheading" id="step2Subheading">Each Student ID and WhatsApp number can only register once per event</p>
               </div>
             </div>
             <span class="step-status-chip" id="stepChip2">Step 2 of 3</span>
+          </div>
+
+          <div class="mb-3 p-3" id="teamNameWrap" style="display:none;border-radius:14px;background:#fdf8f6;border:1.5px solid #c8ab75;">
+            <label class="form-label" for="teamName" style="color:#7b1f20;">🏆 Doubles Team Name (Unique per Tournament Team) *</label>
+            <input type="text" class="form-control fw-bold" id="teamName" placeholder="e.g. Mansoura Aces / Court Kings" autocomplete="off" />
+            <div id="teamNameFeedback" class="mt-1"></div>
+            <div class="invalid-feedback">Please enter your Padel Tournament Team Name.</div>
+          </div>
+
+          <div id="player1HeaderBadge" class="mb-2 fw-bold small text-uppercase" style="display:none;color:#7b1f20;letter-spacing:0.8px;border-bottom:1.5px solid #e6d3ce;padding-bottom:6px;">
+            👤 Player 1 — Team Captain
           </div>
 
           <div class="mb-3">
@@ -631,6 +773,76 @@
             <div class="invalid-feedback">Please select your batch.</div>
           </div>
 
+          <!-- PLAYER 2 (PADEL TOURNAMENT DOUBLES PARTNER) -->
+          <div id="player2Section" class="p-3 mt-3 mb-3" style="display:none;border-radius:16px;background:#fdfbf7;border:1.5px solid #c8ab75;">
+            <div class="fw-bold small text-uppercase mb-3" style="color:#7b1f20;letter-spacing:0.8px;border-bottom:1.5px solid #e6d3ce;padding-bottom:6px;">
+              🤝 Player 2 — Team Partner (2nd Registration in Same Team)
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="p2FullName" id="p2Label_fullName">Player 2 Full Name *</label>
+              <input type="text" class="form-control" id="p2FullName" placeholder="Partner full name" />
+              <div class="invalid-feedback">Please provide Player 2 full name.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="p2StudentId" id="p2Label_studentId">Player 2 University / National ID *</label>
+              <input type="text" class="form-control font-monospace" id="p2StudentId" placeholder="Partner University or National ID" autocomplete="off" />
+              <div id="p2StudentIdFeedback" class="mt-1"></div>
+              <div class="invalid-feedback">Please enter Player 2 unique Student ID.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="p2Email" id="p2Label_email">Player 2 Personal Email *</label>
+              <input type="email" class="form-control" id="p2Email" placeholder="partner@mans.edu.eg" />
+              <div class="invalid-feedback">Please enter Player 2 valid email.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="p2Phone" id="p2Label_phone">Player 2 WhatsApp Mobile Number *</label>
+              <div class="input-group">
+                <select class="form-select font-monospace" id="p2PhoneCountryCode" style="max-width:175px;background-color:#f8fafc;font-size:0.86rem;font-weight:600;" aria-label="Player 2 Country Code">
+                  <option value="20" selected>🇪🇬 Egypt (+20)</option>
+                  <option value="60">🇲🇾 Malaysia (+60)</option>
+                  <option value="966">🇸🇦 Saudi (+966)</option>
+                  <option value="971">🇦🇪 UAE (+971)</option>
+                  <option value="965">🇰🇼 Kuwait (+965)</option>
+                  <option value="974">🇶🇦 Qatar (+974)</option>
+                  <option value="973">🇧🇭 Bahrain (+973)</option>
+                  <option value="968">🇴🇲 Oman (+968)</option>
+                  <option value="962">🇯🇴 Jordan (+962)</option>
+                  <option value="970">🇵🇸 Palestine (+970)</option>
+                  <option value="249">🇸🇩 Sudan (+249)</option>
+                  <option value="963">🇸🇾 Syria (+963)</option>
+                  <option value="964">🇮🇶 Iraq (+964)</option>
+                  <option value="967">🇾🇪 Yemen (+967)</option>
+                  <option value="218">🇱🇾 Libya (+218)</option>
+                  <option value="44">🇬🇧 UK (+44)</option>
+                  <option value="custom">🌍 Other (+Code)</option>
+                </select>
+                <input type="tel" class="form-control font-monospace" id="p2Phone" placeholder="e.g. 01012345678" autocomplete="off" />
+              </div>
+              <div id="p2PhoneE164Preview" class="text-muted mt-1" style="font-size:0.75rem;">Player 2 will receive their own separate QR Ticket PDF on WhatsApp.</div>
+              <div id="p2PhoneFeedback" class="mt-1"></div>
+              <div class="invalid-feedback">Please enter Player 2 valid WhatsApp number.</div>
+            </div>
+
+            <div class="mb-1">
+              <label class="form-label" for="p2BatchSelect" id="p2Label_batch">Player 2 Batch / Academic Year *</label>
+              <select class="form-select" id="p2BatchSelect">
+                <option value="">-- Choose Player 2 batch --</option>
+                <option value="Year 1">Year 1</option>
+                <option value="Year 2">Year 2</option>
+                <option value="Year 3">Year 3</option>
+                <option value="Year 4">Year 4</option>
+                <option value="Year 5">Year 5</option>
+                <option value="Intern 1">Intern 1</option>
+                <option value="Intern 2">Intern 2</option>
+              </select>
+              <div class="invalid-feedback">Please select Player 2 batch.</div>
+            </div>
+          </div>
+
           <!-- Dynamic Event Questions -->
           <div id="customQuestionsWrap"></div>
 
@@ -646,7 +858,7 @@
               <span class="step-badge">03</span>
               <div>
                 <h3 class="step-heading">Payment Reference &amp; Screenshot</h3>
-                <p class="step-subheading">Enter your unique InstaPay Reference ID and attach your transfer receipt</p>
+                <p class="step-subheading" id="step3Subheading">Enter your unique InstaPay Reference ID and attach your transfer receipt</p>
               </div>
             </div>
             <span class="step-status-chip" id="stepChip3">Step 3 of 3</span>
@@ -668,12 +880,12 @@
           </div>
 
           <div class="mb-4">
-            <label class="form-label">InstaPay Payment Screenshot *</label>
+            <label class="form-label" id="receiptFieldLabel">InstaPay Payment Screenshot *</label>
             <div class="upload-zone" id="uploadZone">
               <input type="file" id="screenshotFile" accept="image/*" required />
               <div id="uploadPlaceholder">
                 <div style="font-size:2.3rem;margin-bottom:6px;">📸</div>
-                <div class="fw-bold" style="color:#4a1213;">Tap or drop your InstaPay payment screenshot here</div>
+                <div class="fw-bold" style="color:#4a1213;" id="uploadTitleText">Tap or drop your InstaPay payment screenshot here</div>
                 <div class="text-muted small">Supports JPG, PNG, WEBP (Auto-optimized for fast mobile upload)</div>
               </div>
               <img id="uploadPreview" class="upload-preview" alt="Payment screenshot preview" />
@@ -691,7 +903,20 @@
     </div>
 
     <!-- Registration Confirmation Screen -->
-    <div id="successScreen" class="scroll-step-card in-view text-center" style="display:none;">
+    <div id="successScreen" class="scroll-step-card in-view text-center" style="display:none;position:relative;overflow:hidden;">
+      <svg style="position:absolute;top:14px;left:16px;width:44px;height:44px;opacity:0.85;transform:rotate(-14deg);pointer-events:none;" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M32 6C21 6 14 14 14 25C14 34 20 40 26 42L28 49V58C28 59.6 29.3 61 31 61H33C34.7 61 36 59.6 36 58V49L38 42C44 40 50 34 50 25C50 14 43 6 32 6Z" fill="#7b1f20" stroke="#c8ab75" stroke-width="2.5" stroke-linejoin="round"/>
+        <ellipse cx="32" cy="24" rx="13.5" ry="14.5" fill="#241718" stroke="#c8ab75" stroke-width="1.6"/>
+        <circle cx="26" cy="17" r="1.4" fill="#f5ebd6"/><circle cx="32" cy="16" r="1.4" fill="#f5ebd6"/><circle cx="38" cy="17" r="1.4" fill="#f5ebd6"/>
+        <circle cx="24" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="29.5" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="34.5" cy="23" r="1.4" fill="#f5ebd6"/><circle cx="40" cy="23" r="1.4" fill="#f5ebd6"/>
+        <circle cx="26" cy="29" r="1.4" fill="#f5ebd6"/><circle cx="32" cy="30" r="1.4" fill="#f5ebd6"/><circle cx="38" cy="29" r="1.4" fill="#f5ebd6"/>
+        <rect x="29" y="50" width="6" height="9" rx="2" fill="#f5ebd6"/>
+      </svg>
+      <svg style="position:absolute;top:16px;right:18px;width:32px;height:32px;opacity:0.9;pointer-events:none;" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <circle cx="32" cy="32" r="27" fill="#bef264" stroke="#c8ab75" stroke-width="3"/>
+        <path d="M15 13C24 22 24 42 15 51" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+        <path d="M49 13C40 22 40 42 49 51" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"/>
+      </svg>
       <img src="data:image/jpeg;base64,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" alt="MMSS Crest" style="width:86px;height:86px;border-radius:50%;border:2.5px solid #c8ab75;padding:4px;background:#fff;margin-bottom:12px;box-shadow:0 10px 24px rgba(0,0,0,0.18);" />
       <h3 class="fw-bold mb-1" style="color:#7b1f20;font-family:'Playfair Display',serif;font-size:1.85rem;">Registration Confirmed!</h3>
       <div class="fw-bold text-dark mb-2" id="successEventName"></div>
@@ -700,6 +925,7 @@
       <div class="p-4 mb-4" style="background:linear-gradient(145deg,#fdfbf7 0%,#f5ebd6 100%);border:2px solid #c8ab75;border-radius:20px;display:inline-block;min-width:290px;">
         <div style="font-size:0.76rem;font-weight:800;color:#7b1f20;text-transform:uppercase;letter-spacing:1.5px;">YOUR ASSIGNED SERIAL ID</div>
         <div class="serial-badge" id="serialDisplay">0000</div>
+        <div id="teamSuccessSummary" class="small fw-bold mb-2" style="display:none;color:#4a1213;"></div>
         <div>
           <span class="badge bg-warning text-dark px-3 py-2 fw-bold" style="border-radius:20px;font-size:0.82rem;">
             ⏳ Status: Pending Payment Verification
@@ -707,24 +933,34 @@
         </div>
       </div>
 
-      <div class="alert text-start my-3" style="background:#fdf8f6;border:1px solid #e6d3ce;color:#342526;font-size:0.88rem;border-radius:16px;">
-        <strong>📌 What happens next?</strong><br />
-        • Please save a screenshot of this confirmation pass with your Serial ID.<br />
-        • Once MMSS organizers verify your InstaPay transfer, your official single-use QR Ticket PDF will be dispatched directly to your <strong>WhatsApp</strong> and <strong>Email</strong>.<br />
+      <div class="whatsapp-confirm-box" id="whatsappConfirmBox">
+        <div class="fw-bold" style="color:#241718;font-size:1rem;">
+          💬 Send WhatsApp Confirmation to <span class="font-monospace" style="color:#7b1f20;">01500344545</span>
+        </div>
+        <div class="small text-muted mt-1">
+          Please send the ready-to-send confirmation message below on WhatsApp to <strong>01500344545</strong> to confirm your registration.
+        </div>
+        <div class="whatsapp-msg-preview" id="whatsappMsgPreview"></div>
+        <div class="d-flex flex-wrap gap-2">
+          <a id="whatsappConfirmBtn" href="https://wa.me/201500344545" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-confirm flex-grow-1">
+            💬 Send Confirmation on WhatsApp (01500344545)
+          </a>
+          <button type="button" id="copyWhatsappMsgBtn" onclick="copyWhatsappConfirmMsg()" class="btn btn-outline-dark fw-bold px-3" style="border-radius:14px;border-color:#c8ab75;">
+            📋 Copy Message
+          </button>
+        </div>
       </div>
 
       <div class="d-flex justify-content-center gap-2 flex-wrap mt-4">
-        <button type="button" class="btn fw-bold px-4 py-2" style="border-radius:999px;background:linear-gradient(135deg,#7b1f20,#4a1213);color:#f5ebd6;border:1.5px solid #c8ab75;box-shadow:0 8px 20px rgba(123,31,32,0.3);" onclick="downloadConfirmationCardPng()">
-          📥 Save Confirmation Card to Phone (PNG)
-        </button>
         <button type="button" class="btn btn-outline-dark fw-bold px-4 py-2" style="border-radius:999px;" onclick="location.reload()">
-          Register Another Attendee
+          Register Another Player / Team
         </button>
       </div>
     </div>
   </div>
 
   <div class="text-center mt-3 small" style="color:#f5ebd6;opacity:.85;">Mansoura Manchester Students Society (MMSS) • Official Event Portal</div>
+  <script id="gasTemplateEvents" type="application/json"><?!= events ?></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     var DEFAULT_GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycbzS8F8w-7aoPuqeKo_EdWJkQ7mR80ezwUviQMYwmaLiPkbx1bfMXAlQm1kwOkE1kIeB/exec';
@@ -756,12 +992,16 @@
 
     var events = [];
     var selectedEvent = null;
+    var activeTrack = 'tournament';
     var proofBase64 = null;
     var proofMime   = null;
     var refTimer    = null;
     var idTimer     = null;
     var phoneTimer  = null;
-    var dupState    = { idExists: false, phoneExists: false, refExists: false };
+    var p2IdTimer   = null;
+    var p2PhoneTimer = null;
+    var teamTimer   = null;
+    var dupState    = { idExists: false, phoneExists: false, refExists: false, p2IdExists: false, p2PhoneExists: false, teamExists: false };
 
     function callJsonpIndex(baseUrl, queryObj, onSuccess, onError) {
       var cbName = 'mmss_idx_jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
@@ -854,8 +1094,9 @@
       bindHandlers();
       initScrollExperience();
       try {
-        var rawTemplateEvents = '<?= events ?>';
-        if (rawTemplateEvents.indexOf('<' + '?=') !== 0) {
+        var jsonEl = document.getElementById('gasTemplateEvents');
+        var rawTemplateEvents = jsonEl ? String(jsonEl.textContent || '').trim() : '';
+        if (rawTemplateEvents && rawTemplateEvents.indexOf('<' + '?!') !== 0 && rawTemplateEvents.indexOf('<' + '?=') !== 0) {
           events = JSON.parse(rawTemplateEvents);
         }
       } catch(e) {
@@ -971,12 +1212,192 @@
         }
       });
 
+      var p2PhoneInput = document.getElementById('p2Phone');
+      var p2CcSelect = document.getElementById('p2PhoneCountryCode');
+      function handleP2PhoneChange() {
+        var cleaned = p2PhoneInput.value.replace(/[^0-9+]/g, '');
+        if (p2PhoneInput.value !== cleaned) p2PhoneInput.value = cleaned;
+        var normPreview = getNormalizedFullPhone('p2Phone', 'p2PhoneCountryCode');
+        var prevEl = document.getElementById('p2PhoneE164Preview');
+        if (prevEl) {
+          prevEl.innerHTML = normPreview.length >= 9
+            ? '📲 Partner WhatsApp Target: <strong class="font-monospace text-dark">' + normPreview + '</strong>'
+            : 'Player 2 will receive their own separate QR Ticket PDF on WhatsApp.';
+        }
+        document.getElementById('p2PhoneFeedback').innerHTML = '';
+        dupState.p2PhoneExists = false;
+        clearTimeout(p2PhoneTimer);
+        if (normPreview.replace(/\D/g, '').length >= 8) {
+          p2PhoneTimer = setTimeout(function() { runLiveDuplicateCheck('p2Phone'); }, 550);
+        }
+      }
+      if (p2PhoneInput) p2PhoneInput.addEventListener('input', handleP2PhoneChange);
+      if (p2CcSelect) p2CcSelect.addEventListener('change', handleP2PhoneChange);
+
+      var p2IdInput = document.getElementById('p2StudentId');
+      if (p2IdInput) {
+        p2IdInput.addEventListener('input', function() {
+          document.getElementById('p2StudentIdFeedback').innerHTML = '';
+          dupState.p2IdExists = false;
+          clearTimeout(p2IdTimer);
+          if (this.value.trim().length >= 3) {
+            p2IdTimer = setTimeout(function() { runLiveDuplicateCheck('p2Id'); }, 650);
+          }
+        });
+      }
+
+      var teamNameInput = document.getElementById('teamName');
+      if (teamNameInput) {
+        teamNameInput.addEventListener('input', function() {
+          document.getElementById('teamNameFeedback').innerHTML = '';
+          dupState.teamExists = false;
+          clearTimeout(teamTimer);
+          if (this.value.trim().length >= 2) {
+            teamTimer = setTimeout(function() { runLiveDuplicateCheck('team'); }, 650);
+          }
+        });
+      }
+
       document.getElementById('regForm').addEventListener('submit', onFormSubmit);
+    }
+
+    function hasTracksEnabled() {
+      return !!(selectedEvent && selectedEvent.formSettings && selectedEvent.formSettings.tracks && selectedEvent.formSettings.tracks.enabled);
+    }
+
+    function isTournamentTrackActive() {
+      return hasTracksEnabled() && activeTrack === 'tournament';
+    }
+
+    function selectRegistrationTrack(trackKey) {
+      activeTrack = (trackKey === 'sports_day') ? 'sports_day' : 'tournament';
+      updateTrackUiState();
+      updateLiveTicketPreview();
+    }
+
+    function updateTrackUiState() {
+      var pickerWrap = document.getElementById('trackPickerWrap');
+      var tracks = (selectedEvent && selectedEvent.formSettings && selectedEvent.formSettings.tracks) || null;
+      var enabled = !!(tracks && tracks.enabled);
+      if (pickerWrap) pickerWrap.style.display = enabled ? 'block' : 'none';
+
+      var tournCfg = (tracks && tracks.tournament) || {
+        title: 'Padel Tournament',
+        subtitle: 'Doubles Team · 2 Players · 1 Shared Payment',
+        price: '500 EGP / Team',
+        schedule: '',
+        venue: '',
+        description: ''
+      };
+      var sportsCfg = (tracks && tracks.sportsDay) || {
+        title: 'Sports Day',
+        subtitle: 'Individual Pass · 1 Player',
+        price: '250 EGP / Player',
+        schedule: '',
+        venue: '',
+        description: ''
+      };
+
+      if (enabled) {
+        var tBtn = document.getElementById('trackBtn_tournament');
+        var sBtn = document.getElementById('trackBtn_sports_day');
+        document.getElementById('trackTitle_tournament').textContent = '🏆 ' + (tournCfg.title || 'Padel Tournament');
+        document.getElementById('trackPriceBadge_tournament').textContent = tournCfg.price || '500 EGP / Team';
+        document.getElementById('trackSub_tournament').textContent = tournCfg.subtitle || 'Doubles Team · 2 Players · 1 Shared Payment';
+
+        document.getElementById('trackTitle_sports_day').textContent = '🎾 ' + (sportsCfg.title || 'Sports Day');
+        document.getElementById('trackPriceBadge_sports_day').textContent = sportsCfg.price || '250 EGP / Player';
+        document.getElementById('trackSub_sports_day').textContent = sportsCfg.subtitle || 'Individual Pass · 1 Player';
+
+        var isT = (activeTrack === 'tournament');
+        if (tBtn && sBtn) {
+          if (isT) {
+            tBtn.style.background = 'linear-gradient(135deg,#7b1f20,#4a1213)';
+            tBtn.style.color = '#f5ebd6';
+            tBtn.style.border = '2px solid #7b1f20';
+            document.getElementById('trackTitle_tournament').style.color = '#f5ebd6';
+            document.getElementById('trackSub_tournament').style.color = '#f5ebd6';
+            document.getElementById('trackPriceBadge_tournament').style.background = '#c8ab75';
+            document.getElementById('trackPriceBadge_tournament').style.color = '#241718';
+
+            sBtn.style.background = '#fdf8f6';
+            sBtn.style.color = '#241718';
+            sBtn.style.border = '1.5px solid #c8ab75';
+            document.getElementById('trackTitle_sports_day').style.color = '#7b1f20';
+            document.getElementById('trackSub_sports_day').style.color = '#6b7280';
+            document.getElementById('trackPriceBadge_sports_day').style.background = '#7b1f20';
+            document.getElementById('trackPriceBadge_sports_day').style.color = '#f5ebd6';
+          } else {
+            sBtn.style.background = 'linear-gradient(135deg,#7b1f20,#4a1213)';
+            sBtn.style.color = '#f5ebd6';
+            sBtn.style.border = '2px solid #7b1f20';
+            document.getElementById('trackTitle_sports_day').style.color = '#f5ebd6';
+            document.getElementById('trackSub_sports_day').style.color = '#f5ebd6';
+            document.getElementById('trackPriceBadge_sports_day').style.background = '#c8ab75';
+            document.getElementById('trackPriceBadge_sports_day').style.color = '#241718';
+
+            tBtn.style.background = '#fdf8f6';
+            tBtn.style.color = '#241718';
+            tBtn.style.border = '1.5px solid #c8ab75';
+            document.getElementById('trackTitle_tournament').style.color = '#7b1f20';
+            document.getElementById('trackSub_tournament').style.color = '#6b7280';
+            document.getElementById('trackPriceBadge_tournament').style.background = '#7b1f20';
+            document.getElementById('trackPriceBadge_tournament').style.color = '#f5ebd6';
+          }
+        }
+
+        var chosen = isT ? tournCfg : sportsCfg;
+        document.getElementById('trackDetailHeading').textContent = (isT ? '🏆 ' : '🎾 ') + (chosen.title || '') + ' — Details';
+        document.getElementById('trackDetailModeBadge').textContent = isT ? '2 Players · 1 Team Receipt' : '1 Player · Individual Pass';
+        document.getElementById('trackDetailScheduleWrap').innerHTML = chosen.schedule ? ('<strong>📅 Schedule:</strong> ' + String(chosen.schedule).replace(/</g, '&lt;')) : '';
+        document.getElementById('trackDetailVenueWrap').innerHTML = chosen.venue ? ('<strong>📍 Court / Venue:</strong> ' + String(chosen.venue).replace(/</g, '&lt;')) : '';
+        document.getElementById('trackDetailDesc').textContent = chosen.description || '';
+        var ipHandle = (selectedEvent && selectedEvent.formSettings && selectedEvent.formSettings.instaPayHandle) || '';
+        document.getElementById('trackDetailInstaPayWrap').textContent = ipHandle ? ('💳 InstaPay Handle: ' + ipHandle + ' · Fee: ' + (chosen.price || '')) : ('Fee: ' + (chosen.price || ''));
+      }
+
+      var teamMode = isTournamentTrackActive();
+      var teamWrap = document.getElementById('teamNameWrap');
+      var teamInp = document.getElementById('teamName');
+      var p1Badge = document.getElementById('player1HeaderBadge');
+      var p2Sec = document.getElementById('player2Section');
+      if (teamWrap) teamWrap.style.display = teamMode ? 'block' : 'none';
+      if (teamInp) teamInp.required = teamMode;
+      if (p1Badge) p1Badge.style.display = teamMode ? 'block' : 'none';
+      if (p2Sec) p2Sec.style.display = teamMode ? 'block' : 'none';
+
+      var settings = (selectedEvent && selectedEvent.formSettings) || {};
+      function isCoreOn(key) {
+        var c = (settings.coreFields && settings.coreFields[key]) ? settings.coreFields[key] : (settings[key] || {});
+        return c.visible !== false && c.required !== false;
+      }
+      var p2Fields = [
+        { el: document.getElementById('p2FullName'), req: teamMode && isCoreOn('fullName') },
+        { el: document.getElementById('p2StudentId'), req: teamMode && isCoreOn('studentId') },
+        { el: document.getElementById('p2Email'), req: teamMode && isCoreOn('email') },
+        { el: document.getElementById('p2Phone'), req: teamMode && isCoreOn('phone') },
+        { el: document.getElementById('p2BatchSelect'), req: teamMode && isCoreOn('batch') }
+      ];
+      p2Fields.forEach(function(item) {
+        if (item.el) item.el.required = item.req;
+      });
+
+      var s2Head = document.getElementById('step2Heading');
+      var s2Sub = document.getElementById('step2Subheading');
+      var s3Sub = document.getElementById('step3Subheading');
+      var rLbl = document.getElementById('receiptFieldLabel');
+      var uTitle = document.getElementById('uploadTitleText');
+      if (s2Head) s2Head.textContent = teamMode ? 'Team Name & Both Players Registration' : 'Player Identity & Contact';
+      if (s2Sub) s2Sub.textContent = teamMode ? 'Enter your Team Name and register Player 1 & Player 2 inside the same form' : 'Each Student ID and WhatsApp number can only register once per event';
+      if (s3Sub) s3Sub.textContent = teamMode ? 'Upload ONE InstaPay screenshot & reference covering your whole 2-player team' : 'Enter your unique InstaPay Reference ID and attach your transfer receipt';
+      if (rLbl) rLbl.textContent = teamMode ? 'Shared Team InstaPay Payment Screenshot (1 Image for Both Players) *' : 'InstaPay Payment Screenshot *';
+      if (uTitle) uTitle.textContent = teamMode ? 'Tap or drop ONE InstaPay screenshot for your 2-player team' : 'Tap or drop your InstaPay payment screenshot here';
     }
 
     function onEventSelect() {
       var evId = document.getElementById('eventSelect').value;
       selectedEvent = (events || []).find(function(e) { return e.id === evId; }) || null;
+      activeTrack = 'tournament';
       var closed = selectedEvent && selectedEvent.registrationOpen === false;
       var closedAlertEl = document.getElementById('registrationClosedAlert');
       if (closedAlertEl) {
@@ -999,6 +1420,7 @@
 
       renderCustomQuestions(selectedEvent ? selectedEvent.customFields || [] : []);
       applyCoreFieldSettings(selectedEvent ? selectedEvent.formSettings || {} : {});
+      updateTrackUiState();
       var details = selectedEvent ? selectedEvent.formSettings || {} : {};
       var detailsCard = document.getElementById('eventDetailsCard');
       var description = document.getElementById('eventDescription');
@@ -1063,15 +1485,18 @@
           input.placeholder = cfg.placeholder;
         }
         if (key === 'batch' && Array.isArray(cfg.options) && cfg.options.length) {
-          var curVal = input.value;
-          input.innerHTML = '<option value="">-- Choose your batch --</option>';
-          cfg.options.forEach(function(optStr) {
-            var o = document.createElement('option');
-            o.value = String(optStr);
-            o.textContent = String(optStr);
-            input.appendChild(o);
+          [input, document.getElementById('p2BatchSelect')].forEach(function(bSel) {
+            if (!bSel) return;
+            var curVal = bSel.value;
+            bSel.innerHTML = '<option value="">-- Choose batch --</option>';
+            cfg.options.forEach(function(optStr) {
+              var o = document.createElement('option');
+              o.value = String(optStr);
+              o.textContent = String(optStr);
+              bSel.appendChild(o);
+            });
+            if (curVal && cfg.options.indexOf(curVal) !== -1) bSel.value = curVal;
           });
-          if (curVal && cfg.options.indexOf(curVal) !== -1) input.value = curVal;
         }
         if (wrap) {
           var lbl = wrap.querySelector('.form-label');
@@ -1171,10 +1596,11 @@
       reader.readAsDataURL(file);
     }
 
-    function getNormalizedFullPhone() {
-      var raw = (document.getElementById('phone').value || '').trim();
+    function getNormalizedFullPhone(phoneInputId, ccSelectId) {
+      var phEl = document.getElementById(phoneInputId || 'phone');
+      var raw = phEl ? (phEl.value || '').trim() : '';
       if (!raw) return '';
-      var ccSel = document.getElementById('phoneCountryCode');
+      var ccSel = document.getElementById(ccSelectId || 'phoneCountryCode');
       var cc = ccSel ? ccSel.value : '20';
       var digits = raw.replace(/\D/g, '');
       if (!digits) return '';
@@ -1204,12 +1630,19 @@
       var evId = document.getElementById('eventSelect').value;
       if (!evId) { if (doneCb) doneCb(dupState); return; }
       var studentId = document.getElementById('studentId').value.trim();
-      var phone = getNormalizedFullPhone();
+      var phone = getNormalizedFullPhone('phone', 'phoneCountryCode');
       var ref = document.getElementById('instaPayRef').value.trim();
+      var teamMode = isTournamentTrackActive();
+      var p2Id = teamMode ? (document.getElementById('p2StudentId').value || '').trim() : '';
+      var p2Phone = teamMode ? getNormalizedFullPhone('p2Phone', 'p2PhoneCountryCode') : '';
+      var teamName = teamMode ? (document.getElementById('teamName').value || '').trim() : '';
 
       var idFb = document.getElementById('studentIdFeedback');
       var phFb = document.getElementById('phoneFeedback');
       var rfFb = document.getElementById('refFeedback');
+      var p2IdFb = document.getElementById('p2StudentIdFeedback');
+      var p2PhFb = document.getElementById('p2PhoneFeedback');
+      var tmFb = document.getElementById('teamNameFeedback');
 
       if (sourceField === 'ref' && ref) {
         rfFb.innerHTML = '<span class="text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Checking reference ID...</span>';
@@ -1219,12 +1652,18 @@
         eventId: evId,
         studentId: studentId,
         phone: phone,
-        instaPayRef: ref
+        instaPayRef: ref,
+        player2StudentId: p2Id,
+        player2Phone: p2Phone,
+        teamName: teamName
       }, function(res) {
         if (!res) { if (doneCb) doneCb(dupState); return; }
         dupState.idExists = !!res.idExists;
         dupState.phoneExists = !!res.phoneExists;
         dupState.refExists = !!res.refExists;
+        dupState.p2IdExists = !!res.p2IdExists;
+        dupState.p2PhoneExists = !!res.p2PhoneExists;
+        dupState.teamExists = !!res.teamExists;
 
         if (studentId) {
           var idStTxt = res.idStatus ? (' [' + res.idStatus + ']') : '';
@@ -1237,6 +1676,24 @@
           phFb.innerHTML = res.phoneExists
             ? '<span class="ref-feedback-bad">❌ This WhatsApp Phone Number is already registered for this event' + phStTxt + '! Cannot register again.</span>'
             : '<span class="ref-feedback-good">✓ Phone number is available (' + phone + ')</span>';
+        }
+        if (teamMode && p2Id && p2IdFb) {
+          var p2IdStTxt = res.p2IdStatus ? (' [' + res.p2IdStatus + ']') : '';
+          p2IdFb.innerHTML = res.p2IdExists
+            ? '<span class="ref-feedback-bad">❌ Player 2 ID is unavailable' + p2IdStTxt + '!</span>'
+            : '<span class="ref-feedback-good">✓ Player 2 ID is available</span>';
+        }
+        if (teamMode && p2Phone && p2Phone.replace(/\D/g, '').length >= 8 && p2PhFb) {
+          var p2PhStTxt = res.p2PhoneStatus ? (' [' + res.p2PhoneStatus + ']') : '';
+          p2PhFb.innerHTML = res.p2PhoneExists
+            ? '<span class="ref-feedback-bad">❌ Player 2 WhatsApp Phone is unavailable' + p2PhStTxt + '!</span>'
+            : '<span class="ref-feedback-good">✓ Player 2 phone is available (' + p2Phone + ')</span>';
+        }
+        if (teamMode && teamName && tmFb) {
+          var tmStTxt = res.teamStatus ? (' [' + res.teamStatus + ']') : '';
+          tmFb.innerHTML = res.teamExists
+            ? '<span class="ref-feedback-bad">❌ Team Name already registered' + tmStTxt + '! Choose another name.</span>'
+            : '<span class="ref-feedback-good">✓ Team Name is available</span>';
         }
         if (ref) {
           var rfStTxt = res.refStatus ? (' [' + res.refStatus + ']') : '';
@@ -1256,6 +1713,7 @@
       form.classList.add('was-validated');
       if (!form.checkValidity()) return;
 
+      var teamMode = isTournamentTrackActive();
       if (dupState.idExists) {
         showFormError('This Student / University ID has already been registered for this event. Duplicate IDs are not allowed.');
         document.getElementById('studentId').focus();
@@ -1264,6 +1722,21 @@
       if (dupState.phoneExists) {
         showFormError('This WhatsApp Phone Number has already been registered for this event. Duplicate phone numbers are not allowed.');
         document.getElementById('phone').focus();
+        return;
+      }
+      if (teamMode && dupState.teamExists) {
+        showFormError('This Team Name is already taken. Please enter a unique team name.');
+        document.getElementById('teamName').focus();
+        return;
+      }
+      if (teamMode && dupState.p2IdExists) {
+        showFormError('Player 2 Student ID is invalid or already registered (cannot match Player 1).');
+        document.getElementById('p2StudentId').focus();
+        return;
+      }
+      if (teamMode && dupState.p2PhoneExists) {
+        showFormError('Player 2 WhatsApp Phone Number is invalid or already registered (cannot match Player 1).');
+        document.getElementById('p2Phone').focus();
         return;
       }
       if (dupState.refExists) {
@@ -1289,11 +1762,28 @@
         return;
       }
 
-      var normalizedPhone = getNormalizedFullPhone();
+      var normalizedPhone = getNormalizedFullPhone('phone', 'phoneCountryCode');
       if (isCoreNeeded('phone') && (normalizedPhone.replace(/\D/g, '').length < 8 || normalizedPhone.replace(/\D/g, '').length > 15)) {
         showFormError('Please enter a valid WhatsApp phone number (with country code).');
         document.getElementById('phone').focus();
         return;
+      }
+
+      var p2Payload = null;
+      if (teamMode) {
+        var p2PhoneNorm = getNormalizedFullPhone('p2Phone', 'p2PhoneCountryCode');
+        if (isCoreNeeded('phone') && (p2PhoneNorm.replace(/\D/g, '').length < 8 || p2PhoneNorm.replace(/\D/g, '').length > 15)) {
+          showFormError('Please enter a valid WhatsApp phone number for Player 2.');
+          document.getElementById('p2Phone').focus();
+          return;
+        }
+        p2Payload = {
+          fullName: document.getElementById('p2FullName').value.trim(),
+          studentId: document.getElementById('p2StudentId').value.trim(),
+          email: document.getElementById('p2Email').value.trim(),
+          phone: p2PhoneNorm,
+          batch: document.getElementById('p2BatchSelect').value
+        };
       }
 
       var customResponses = {};
@@ -1307,13 +1797,16 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting registration…';
 
-      // Fast Single-Call Registration (server verifies uniqueness + saves receipt + records row in 1 step!)
+      // Fast Single-Call Registration (server verifies uniqueness + saves receipt + records row(s) in 1 step!)
       var payload = {
         eventId: evId,
+        registrationTrack: hasTracksEnabled() ? activeTrack : '',
+        teamName: teamMode ? document.getElementById('teamName').value.trim() : '',
         studentId: document.getElementById('studentId').value.trim(),
         fullName: document.getElementById('fullName').value.trim(),
         email: document.getElementById('email').value.trim(),
         phone: normalizedPhone,
+        player2: p2Payload,
         instaPayRef: document.getElementById('instaPayRef').value.trim(),
         paymentProofBase64: proofBase64,
         paymentProofMime: proofMime || 'image/jpeg',
@@ -1327,9 +1820,46 @@
           document.getElementById('successScreen').style.display = 'block';
           window.scrollTo({ top: 0, behavior: 'smooth' });
           launchGoldConfetti();
-          document.getElementById('serialDisplay').textContent = subRes.serialId;
+          var serialEl = document.getElementById('serialDisplay');
+          var teamSummaryEl = document.getElementById('teamSuccessSummary');
+          if (subRes.isTeam && Array.isArray(subRes.tickets) && subRes.tickets.length > 1) {
+            serialEl.textContent = subRes.tickets.map(function(t) { return '#' + t.serialId; }).join(' & ');
+            if (teamSummaryEl) {
+              teamSummaryEl.style.display = 'block';
+              teamSummaryEl.textContent = '🏆 Team: ' + (subRes.teamName || '') + ' (' + subRes.tickets.map(function(t) { return t.fullName; }).join(' & ') + ')';
+            }
+          } else {
+            serialEl.textContent = subRes.serialId;
+            if (teamSummaryEl) teamSummaryEl.style.display = 'none';
+          }
           var evNameEl = document.getElementById('successEventName');
-          if (evNameEl) evNameEl.textContent = 'Event: ' + (subRes.eventName || '');
+          if (evNameEl) evNameEl.textContent = 'Event: ' + (subRes.eventName || '') + (subRes.track ? (' · ' + subRes.track) : '');
+
+          // Populate WhatsApp confirmation message & direct button to 01500344545
+          var waLines = [
+            'Hello MMSS Team! 🎾',
+            'I just submitted my registration for *' + (subRes.eventName || 'Padel Funday') + '* and would like to confirm my booking:',
+            '',
+            '• Track: ' + (subRes.track || 'Padel Funday')
+          ];
+          if (subRes.isTeam && Array.isArray(subRes.tickets) && subRes.tickets.length > 1) {
+            waLines.push('• Team Name: ' + (subRes.teamName || '—'));
+            subRes.tickets.forEach(function(tk, idx) {
+              waLines.push('• ' + (tk.slot || ('Player ' + (idx + 1))) + ': ' + (tk.fullName || '') + ' (Serial #' + tk.serialId + ' | ID: ' + (tk.studentId || '—') + ')');
+            });
+          } else {
+            waLines.push('• Player Name: ' + (payload.fullName || ''));
+            waLines.push('• Serial ID: #' + (subRes.serialId || '0001'));
+            if (payload.studentId) waLines.push('• Student ID: ' + payload.studentId);
+          }
+          if (payload.instaPayRef) waLines.push('• InstaPay Ref: ' + payload.instaPayRef);
+          waLines.push('', 'Please confirm my registration. Thank you!');
+          var waText = waLines.join('\n');
+          var waPrev = document.getElementById('whatsappMsgPreview');
+          var waBtn = document.getElementById('whatsappConfirmBtn');
+          if (waPrev) waPrev.textContent = waText;
+          if (waBtn) waBtn.href = 'https://wa.me/201500344545?text=' + encodeURIComponent(waText);
+          window.__lastWaConfirmText = waText;
         } else {
           showFormError((subRes && subRes.error) || 'Registration could not be completed.');
           btn.disabled = false;
@@ -1340,6 +1870,19 @@
         btn.disabled = false;
         btn.innerHTML = '✨ Complete Registration &amp; Submit for Approval';
       });
+    }
+
+    function copyWhatsappConfirmMsg() {
+      var text = window.__lastWaConfirmText || (document.getElementById('whatsappMsgPreview') && document.getElementById('whatsappMsgPreview').textContent) || '';
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(function(){});
+      }
+      var btn = document.getElementById('copyWhatsappMsgBtn');
+      if (btn) {
+        btn.textContent = '✓ Copied';
+        setTimeout(function() { btn.textContent = '📋 Copy Message'; }, 2200);
+      }
     }
 
     // ── INTERACTIVE SCROLL JOURNEY & TOGGLEABLE EVENT DETAILS ──────────────
@@ -1366,11 +1909,22 @@
       var nameVal = (document.getElementById('fullName').value || '').trim();
       var idVal = (document.getElementById('studentId').value || '').trim();
       var batchVal = (document.getElementById('batchSelect').value || '').trim();
-      var phoneVal = getNormalizedFullPhone();
+      var phoneVal = getNormalizedFullPhone('phone', 'phoneCountryCode');
       var refVal = (document.getElementById('instaPayRef').value || '').trim();
 
+      var teamOk = true;
+      if (isTournamentTrackActive()) {
+        var tm = (document.getElementById('teamName').value || '').trim();
+        var p2n = (document.getElementById('p2FullName').value || '').trim();
+        var p2i = (document.getElementById('p2StudentId').value || '').trim();
+        var p2e = (document.getElementById('p2Email').value || '').trim();
+        var p2p = getNormalizedFullPhone('p2Phone', 'p2PhoneCountryCode');
+        var p2b = (document.getElementById('p2BatchSelect').value || '').trim();
+        teamOk = !!(tm && p2n && p2i && p2e && p2p.length >= 9 && p2b && !dupState.teamExists && !dupState.p2IdExists && !dupState.p2PhoneExists);
+      }
+
       var step1Done = !!(evSel && evSel.value);
-      var step2Done = !!(nameVal && idVal && (document.getElementById('email').value || '').trim() && phoneVal.length >= 9 && batchVal && !dupState.idExists && !dupState.phoneExists);
+      var step2Done = !!(nameVal && idVal && (document.getElementById('email').value || '').trim() && phoneVal.length >= 9 && batchVal && !dupState.idExists && !dupState.phoneExists && teamOk);
       var step3Done = !!(refVal && proofBase64 && !dupState.refExists);
 
       setStepState(1, step1Done);
@@ -1392,7 +1946,7 @@
     }
 
     function initScrollExperience() {
-      ['eventSelect', 'fullName', 'studentId', 'email', 'phone', 'phoneCountryCode', 'batchSelect', 'instaPayRef', 'screenshotFile'].forEach(function(id) {
+      ['eventSelect', 'fullName', 'studentId', 'email', 'phone', 'phoneCountryCode', 'batchSelect', 'teamName', 'p2FullName', 'p2StudentId', 'p2Email', 'p2Phone', 'p2PhoneCountryCode', 'p2BatchSelect', 'instaPayRef', 'screenshotFile'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) {
           el.addEventListener('input', updateLiveTicketPreview);
